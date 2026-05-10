@@ -1,15 +1,13 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const userSchema = new mongoose.Schema({
     username : {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        trim : true
     },
     fullName : {
         type: String,
@@ -18,7 +16,9 @@ const userSchema = new mongoose.Schema({
     email : {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        lowercase: true,
+        trim: true
     }, 
     passwordHash : {
         type: String,
@@ -39,18 +39,18 @@ const userSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-UserSchema.pre('save', async function(next) {
+userSchema.pre('save', async function() {
     if (!this.isModified('passwordHash')) {
-        return next();
+        return ;
     }
-    this.passwordHash = bcrypt.hash(this.passwordHash, 10);
+    this.passwordHash = await bcrypt.hash(this.passwordHash, 10);
 });
 
-UserSchema.methods.comparePassword = async function(password) {
+userSchema.methods.comparePassword = async function(password) {
     return await bcrypt.compare(password, this.passwordHash);
 }
 
-UserSchema.methods.generateAccessToken =  function() {
+userSchema.methods.generateAccessToken =  function() {
     return  jwt.sign(
         {
             userId: this._id,
@@ -66,7 +66,7 @@ UserSchema.methods.generateAccessToken =  function() {
     )
 }
 
-UserSchema.methods.generateRefreshToken = function() {
+userSchema.methods.generateRefreshToken = function() {
     return jwt.sign(
         {
             userId: this._id,
