@@ -33,4 +33,8 @@ import userRouter from "./routes/user.routes.js";
 
 app.use("/api/v1/users", userRouter);
 
+//error handling middleware
+import errorHandler from "./middlewares/error.middleware.js";
+app.use(errorHandler);
+
 export default app;
