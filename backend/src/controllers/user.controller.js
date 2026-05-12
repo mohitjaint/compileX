@@ -37,4 +37,56 @@ const registerUser  = asyncHandler(async (req, res) => {
     }));
 });
 
-export {registerUser};
+const loginUser = asyncHandler(async (req, res) => {
+    const {username, email, password} = req.body;
+    // Validate input
+    if (!email && !username) {
+        throw new ApiError(400, 'Email or username is required');
+    }
+    if (!password) {
+        throw new ApiError(400, "Password is required");
+    }
+    // Check if user exists
+    const user = await User.findOne({
+        $or: [
+            {email},
+            {username}
+        ]
+    });
+    if (!user) {
+        throw new ApiError(400, 'Invalid email/username or password');
+    }
+    //Check if password is correct
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+        throw new ApiError(400, 'Invalid email/username or password');
+    }
+    // generate access token
+    const accessToken = user.generateAccessToken();
+    // generate refresh token
+    const refreshToken = user.generateRefreshToken();
+    // Save refresh token to database
+    user.refreshToken = refreshToken;
+    // cookies optons
+    const options = {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'strict',
+    };
+    //Save user with refresh token
+    await user.save({validateBeforeSave: false});
+
+    // Send response with tokens and user data
+    const userData = await User.findById(user._id).select('-passwordHash -refreshToken');
+    res.status(200)
+    .cookie('refreshToken', refreshToken, options)
+    .json(new ApiResponse(200, 'Login successful', {
+        accessToken,
+        user: userData
+    }));
+});
+
+export {
+    registerUser,
+    loginUser
+};
