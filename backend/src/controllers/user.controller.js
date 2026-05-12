@@ -52,7 +52,7 @@ const loginUser = asyncHandler(async (req, res) => {
             {email},
             {username}
         ]
-    });
+    }).select('+passwordHash +refreshToken');
     if (!user) {
         throw new ApiError(400, 'Invalid email/username or password');
     }
@@ -86,7 +86,13 @@ const loginUser = asyncHandler(async (req, res) => {
     }));
 });
 
+const getCurrentUser = asyncHandler(async (req, res) => {
+    const user = req.user;
+    res.status(200).json(new ApiResponse(200, 'Current user retrieved successfully', user));
+});
+
 export {
     registerUser,
-    loginUser
+    loginUser,
+    getCurrentUser
 };
