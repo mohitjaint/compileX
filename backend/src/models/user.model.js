@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema({
         default: '',
         select: false
     }
-}, { timestamps: true });
+}, { timestamps: true, versionKey: false });
 
 userSchema.pre('save', async function() {
     if (!this.isModified('passwordHash')) {
