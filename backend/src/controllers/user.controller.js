@@ -131,9 +131,20 @@ const rotateTokens = asyncHandler(async (req, res) => {
     }));
 });
 
+const logoutUser = asyncHandler(async (req, res) => {
+    const user = req.user;
+    // Clear refresh token from database
+    user.refreshToken = "";
+    await user.save({validateBeforeSave: false});
+    // Clear refresh token cookie
+    res.clearCookie('refreshToken', options);
+    res.status(200).json(new ApiResponse(200, 'Logout successful'));
+});
+
 export {
     registerUser,
     loginUser,
     getCurrentUser,
-    rotateTokens
+    rotateTokens,
+    logoutUser
 };
