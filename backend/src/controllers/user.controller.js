@@ -3,6 +3,8 @@ import {asyncHandler} from '../utils/asyncHandler.js';
 import {ApiResponse} from '../utils/ApiResponse.js';
 import {ApiError} from '../utils/ApiError.js';
 import jwt from 'jsonwebtoken';
+import { options } from '../constants/cookieOptions.js';
+
 const registerUser  = asyncHandler(async (req, res) => {
     const {username, fullName, email, password} = req.body;
     // Check if user already exists
@@ -68,12 +70,6 @@ const loginUser = asyncHandler(async (req, res) => {
     const refreshToken = user.generateRefreshToken();
     // Save refresh token to database
     user.refreshToken = refreshToken;
-    // cookies optons
-    const options = {
-        httpOnly: true,
-        secure: false,
-        sameSite: 'strict',
-    };
     //Save user with refresh token
     await user.save({validateBeforeSave: false});
 
@@ -119,12 +115,6 @@ const rotateTokens = asyncHandler(async (req, res) => {
     // Update refresh token in database
     user.refreshToken = newRefreshToken;
     await user.save({validateBeforeSave: false});
-    // Set cookie options
-    const options = {
-        httpOnly: true,
-        secure: false,
-        sameSite: 'strict',
-    };
     // Send response with new tokens
     res.status(200)
     .cookie('refreshToken', newRefreshToken, options)
