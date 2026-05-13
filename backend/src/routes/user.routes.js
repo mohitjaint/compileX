@@ -5,7 +5,8 @@ import {
     getCurrentUser,
     rotateTokens,
     logoutUser,
-    updateUserProfile
+    updateUserProfile,
+    updateUserPassword
  } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -19,5 +20,6 @@ router.post('/rotate-tokens', rotateTokens);
 router.get('/me',verifyJWT, getCurrentUser);
 router.post('/logout', verifyJWT, logoutUser);
 router.patch('/update-profile', verifyJWT, updateUserProfile);
+router.patch('/update-password', verifyJWT, updateUserPassword);
 
 export default router;

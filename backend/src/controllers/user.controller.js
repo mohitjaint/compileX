@@ -169,11 +169,49 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, 'User profile updated successfully', updatedUserData));
 });
 
+const updateUserPassword = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id).select('+passwordHash +refreshToken');
+    const {currentPassword, newPassword} = req.body;
+
+    // Validate input
+    if (!currentPassword?.trim() || !newPassword?.trim()) {
+        throw new ApiError(400, 'Current password and new password are required');
+    }
+    // Check if current password is correct
+    const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+    if (!isCurrentPasswordValid) {
+        throw new ApiError(400, 'Current password is incorrect');
+    }
+    // check if new password is different from current password
+    if (currentPassword === newPassword) {
+        throw new ApiError(400, 'New password must be different from current password');
+    }
+    // Update password
+    user.passwordHash = newPassword;
+
+    // set new refresh token to invalidate old tokens
+    const newRefreshToken = user.generateRefreshToken();
+    user.refreshToken = newRefreshToken;
+
+    // get new access token
+    const newAccessToken = user.generateAccessToken();
+
+    await user.save();;
+
+    // Clear old refresh token cookie and set new one
+    res.status(200)
+    .cookie('refreshToken', newRefreshToken, options)
+    .json(new ApiResponse(200, 'Password updated successfully', {
+        accessToken: newAccessToken
+    }));
+});
+
 export {
     registerUser,
     loginUser,
     getCurrentUser,
     rotateTokens,
     logoutUser,
-    updateUserProfile
+    updateUserProfile,
+    updateUserPassword
 };
