@@ -2,6 +2,7 @@ import User from '../models/user.model.js';
 import {asyncHandler} from '../utils/asyncHandler.js';
 import {ApiResponse} from '../utils/ApiResponse.js';
 import {ApiError} from '../utils/ApiError.js';
+import jwt from 'jsonwebtoken';
 const registerUser  = asyncHandler(async (req, res) => {
     const {username, fullName, email, password} = req.body;
     // Check if user already exists
@@ -91,8 +92,50 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, 'Current user retrieved successfully', user));
 });
 
+const rotateTokens = asyncHandler(async (req, res) => {
+    const {refreshToken} = req.cookies;
+    if (!refreshToken) {
+        throw new ApiError(401, 'Unauthorized');
+    }
+    // Verify refresh token and get user
+    let payload;
+    try {
+        payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    } catch (err) {
+        throw new ApiError(401, 'Unauthorized');
+    }
+    // Find user by ID and check if refresh token matches
+    const user = await User.findById(payload.userId).select('+refreshToken');
+    if (!user) {
+        throw new ApiError(401, 'Unauthorized');
+    }
+    if (user.refreshToken !== refreshToken) {
+        throw new ApiError(401, 'Unauthorized');
+    }
+    // Generate new access token
+    const accessToken = user.generateAccessToken();
+    // Generate new refresh token
+    const newRefreshToken = user.generateRefreshToken();
+    // Update refresh token in database
+    user.refreshToken = newRefreshToken;
+    await user.save({validateBeforeSave: false});
+    // Set cookie options
+    const options = {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'strict',
+    };
+    // Send response with new tokens
+    res.status(200)
+    .cookie('refreshToken', newRefreshToken, options)
+    .json(new ApiResponse(200, 'Tokens rotated successfully', {
+        accessToken
+    }));
+});
+
 export {
     registerUser,
     loginUser,
-    getCurrentUser
+    getCurrentUser,
+    rotateTokens
 };
