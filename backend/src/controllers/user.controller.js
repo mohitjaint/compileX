@@ -31,12 +31,20 @@ const registerUser  = asyncHandler(async (req, res) => {
     //Save user to database
     await newUser.save();
 
-    res.status(201).json(new ApiResponse(201, 'User registered successfully', {
-        userId: newUser._id,
-        username: newUser.username,
-        fullName: newUser.fullName,
-        email: newUser.email,
-        role: newUser.role
+    //generate tokens
+    const accessToken = newUser.generateAccessToken();
+    const refreshToken = newUser.generateRefreshToken();
+    // Save refresh token to database
+    newUser.refreshToken = refreshToken;
+    await newUser.save({validateBeforeSave: false});
+
+    // Send response with tokens and user data
+    const userData = await User.findById(newUser._id);
+    res.status(201)
+    .cookie('refreshToken', refreshToken, options)
+    .json(new ApiResponse(201, 'User registered successfully', {
+        accessToken,
+        user: userData
     }));
 });
 
