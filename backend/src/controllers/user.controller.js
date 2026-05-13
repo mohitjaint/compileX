@@ -141,10 +141,39 @@ const logoutUser = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, 'Logout successful'));
 });
 
+const updateUserProfile = asyncHandler(async (req, res) => {
+    const user = req.user;
+    const {fullName, email, username} = req.body;
+    // Update user fields if provided
+    if (fullName?.trim()) user.fullName = fullName.trim();
+    if (email?.trim()) {
+        // Check if email is already taken by another user
+        const existingUser = await User.findOne({email, _id: {$ne: user._id}});
+        if (existingUser) {
+            throw new ApiError(400, 'Email is already taken');
+        }
+        user.email = email.trim();
+    }
+    if (username?.trim()) {
+        // Check if username is already taken by another user
+        const existingUser = await User.findOne({username, _id: {$ne: user._id}});
+        if (existingUser) {
+            throw new ApiError(400, 'Username is already taken');
+        }
+        user.username = username.trim();
+    }
+    // Save updated user to database
+    await user.save();
+    // Send response with updated user data
+    const updatedUserData = await User.findById(user._id);
+    res.status(200).json(new ApiResponse(200, 'User profile updated successfully', updatedUserData));
+});
+
 export {
     registerUser,
     loginUser,
     getCurrentUser,
     rotateTokens,
-    logoutUser
+    logoutUser,
+    updateUserProfile
 };
