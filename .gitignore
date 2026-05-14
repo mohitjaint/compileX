@@ -20,3 +20,6 @@ build/
 # OS files
 .DS_Store
 Thumbs.db
+
+# uploaded avatars
+/backend/public/avatars

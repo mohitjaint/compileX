@@ -6,9 +6,11 @@ import {
     rotateTokens,
     logoutUser,
     updateUserProfile,
-    updateUserPassword
+    updateUserPassword,
+    updateUserAvatar
  } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { uploadAvatar } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
@@ -21,5 +23,6 @@ router.get('/me',verifyJWT, getCurrentUser);
 router.post('/logout', verifyJWT, logoutUser);
 router.patch('/update-profile', verifyJWT, updateUserProfile);
 router.patch('/update-password', verifyJWT, updateUserPassword);
+router.patch('/update-avatar', verifyJWT, uploadAvatar, updateUserAvatar);
 
 export default router;

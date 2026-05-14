@@ -4,6 +4,8 @@ import {ApiResponse} from '../utils/ApiResponse.js';
 import {ApiError} from '../utils/ApiError.js';
 import jwt from 'jsonwebtoken';
 import { options } from '../constants/cookieOptions.js';
+import path from 'path';
+import fs from 'fs';
 
 const registerUser  = asyncHandler(async (req, res) => {
     const {username, fullName, email, password} = req.body;
@@ -206,6 +208,30 @@ const updateUserPassword = asyncHandler(async (req, res) => {
     }));
 });
 
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+        throw new ApiError(404, 'User not found');
+    }
+
+    if (!req.file) {
+        throw new ApiError(400, 'No file uploaded');
+    }
+    const oldAvatarPath = user.avatarUrl ? path.join('public', user.avatarUrl) : null;
+    // Update user's avatar path
+    user.avatarUrl = path.join('avatars', req.file.filename);
+    await user.save();
+
+    // delete old avatar file if it exists and is not the default avatar
+    if (oldAvatarPath && fs.existsSync(oldAvatarPath) && !oldAvatarPath.includes('default-avatar.png')) {
+        fs.unlinkSync(oldAvatarPath);
+    }
+
+    res.status(200).json(new ApiResponse(200, 'Avatar updated successfully', {
+        avatarUrl: user.avatarUrl
+    }));
+});
 export {
     registerUser,
     loginUser,
@@ -213,5 +239,6 @@ export {
     rotateTokens,
     logoutUser,
     updateUserProfile,
-    updateUserPassword
+    updateUserPassword,
+    updateUserAvatar
 };
