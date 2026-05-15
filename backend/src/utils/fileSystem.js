@@ -2,6 +2,29 @@ import fs from 'fs';
 import AdmZip from 'adm-zip';
 import ApiError from '../ApiError.js';
 
+export const ensureDirectoryExists = (dirPath) => {
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, {
+            recursive: true
+        });
+    }
+};
+
+export const deleteFileIfExists = (filePath) => {
+    if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+    }
+};
+
+export const deleteDirectoryIfExists = (dirPath) => {
+    if (fs.existsSync(dirPath)) {
+        fs.rmSync(dirPath, {
+            recursive: true,
+            force: true
+        });
+    }
+};
+
 export const extractZip = (
     zipFilePath,
     destinationPath
@@ -38,3 +61,13 @@ export const extractZip = (
         );
     }
 };
+
+export const parseJSONSafe = (jsonString) => {
+    try {
+        return JSON.parse(jsonString);
+    }
+    catch (error) {
+        throw new ApiError(400, 'Invalid JSON format');
+    }
+};
+
