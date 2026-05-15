@@ -4,7 +4,7 @@ import fs from 'fs';
 import { ApiError } from '../utils/ApiError.js';
 
 // Allow only image files
-const fileFilter = (req, file, cb) => {
+const fileFilterAvatar = (req, file, cb) => {
     const allowedExts = ['.png', '.jpg', '.jpeg', '.webp'];
     const ext = path.extname(file.originalname).toLowerCase();
     if (file.mimetype.startsWith('image/') && allowedExts.includes(ext)) {
@@ -14,32 +14,69 @@ const fileFilter = (req, file, cb) => {
     }
 }
 
-const destinationPath = path.join('public', 'avatars');
+const destinationPathAvatar = path.join('public', 'avatars');
 
-const storage = multer.diskStorage({
-destination: function (req, file, cb) {
-    // Ensure the destination directory exists
-    if (!fs.existsSync(destinationPath)) {
-        fs.mkdirSync(destinationPath, { recursive: true });
-    }
-    cb(null, destinationPath);
-},
-filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, req.user._id + Date.now() + ext);
+const storageAvatar = multer.diskStorage({
+    destination: function (req, file, cb) {
+        // Ensure the destination directory exists
+        if (!fs.existsSync(destinationPathAvatar)) {
+            fs.mkdirSync(destinationPathAvatar, { recursive: true });
+        }
+        cb(null, destinationPathAvatar);
+    },
+    filename: function (req, file, cb) {
+        const ext = path.extname(file.originalname).toLowerCase();
+        cb(null, req.user._id + Date.now() + ext);
 }
 
 });
 
 const uploadAvatar = multer({ 
-    storage, 
-    fileFilter, 
+    storage : storageAvatar, 
+    fileFilter: fileFilterAvatar, 
     limits: {
         fileSize: 2 * 1024 * 1024
     } })
     .single('avatar');
 
 
+// multer middleware for problem test case file upload
+
+const fileFilterTestCases = (req, file, cb) => {
+    const allowedExts = ['.zip'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if ( allowedExts.includes(ext)) {
+        cb(null, true);
+    } else {
+        cb(new ApiError(400, 'Only zip files are allowed'), false);
+    }
+}
+
+const destinationPathTestCases = path.join('storage', 'temp');
+
+const storageTestCases = multer.diskStorage({
+    destination: function (req, file, cb) {
+        // Ensure the destination directory exists
+        if (!fs.existsSync(destinationPathTestCases)) {
+            fs.mkdirSync(destinationPathTestCases, { recursive: true });
+        }
+        cb(null, destinationPathTestCases);
+    },
+    filename: function (req, file, cb) {
+        const ext = path.extname(file.originalname).toLowerCase();
+        cb(null, Math.random() + '-' + Date.now() + ext);
+    }
+});
+
+const uploadTestCases = multer({ 
+    storage: storageTestCases, 
+    fileFilter: fileFilterTestCases, 
+    limits: {
+        fileSize: 50 * 1024 * 1024
+    } })
+    .single('testcases');
+
 export {
-    uploadAvatar
+    uploadAvatar,
+    uploadTestCases
 }

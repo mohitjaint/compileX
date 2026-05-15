@@ -28,10 +28,12 @@ app.use(cookieParser()); //for cookies
 //routes import 
 
 import userRouter from "./routes/user.routes.js";
+import problemRouter from "./routes/problem.routes.js";
 
 //routes declaration
 
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/problems", problemRouter);
 
 //error handling middleware
 import errorHandler from "./middlewares/error.middleware.js";

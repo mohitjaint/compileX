@@ -38,18 +38,10 @@ const problemSchema = new mongoose.Schema({
             }
         }
     ],
-    hiddenTestCases : [
-        {
-            input : {
-                type: String,
-                required: true
-            },
-            output : {
-                type: String,
-                required: true
-            }
-        }
-    ],
+    hiddenTestCasesPath: {
+        type: String,
+        required: true
+    },
     timelimit : {
         type: Number,
         required: true
