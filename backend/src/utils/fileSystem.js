@@ -1,6 +1,6 @@
 import fs from 'fs';
 import AdmZip from 'adm-zip';
-import ApiError from '../ApiError.js';
+import {ApiError} from './ApiError.js';
 
 export const ensureDirectoryExists = (dirPath) => {
     if (!fs.existsSync(dirPath)) {

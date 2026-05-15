@@ -23,3 +23,6 @@ Thumbs.db
 
 # uploaded avatars
 /backend/public/avatars
+
+# uploaded test cases
+/backend/storage/
