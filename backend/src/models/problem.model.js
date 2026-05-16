@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-
+import {ApiResponse} from '../utils/ApiResponse.js';
+import {ApiError} from '../utils/ApiError.js';
 const problemSchema = new mongoose.Schema({
     title : {
         type: String,
@@ -8,7 +9,7 @@ const problemSchema = new mongoose.Schema({
     slug : {
         type: String,
         required: true,
-        unique: true
+        unique: true,
     }, 
     statement : {
         type: String,
@@ -43,12 +44,24 @@ const problemSchema = new mongoose.Schema({
         required: true
     },
     timelimit : {
-        type: Number,
-        required: true
+        type: Number, // ms
+        required: [true, 'Time limit is required'],
+        min : [100, 'Time limit must be at least 100 ms'],
+        max : [10000, 'Time limit must be at most 10000 ms'],
+        validate : {
+            validator : Number.isInteger,
+            message : 'Time limit must be an integer'
+        }
     },
     memorylimit : {
         type: Number,
-        required: true
+        required: [true, 'Memory limit is required'],
+        min : [128, "Memory limit must be at least 128 MB"], // MB
+        max : [ 1024, "Memory limit must be at most 1024 MB"],
+        validate : {
+            validator : Number.isInteger,
+            message : 'Memory limit must be an integer'
+        }
     },
     difficulty : {
         type: String,
@@ -60,7 +73,7 @@ const problemSchema = new mongoose.Schema({
         ref : 'User',
         required: true
     }   
-}, {timestamps: true});
+}, {timestamps: true, versionKey: false});
 
 const Problem = mongoose.model('Problem', problemSchema);
 

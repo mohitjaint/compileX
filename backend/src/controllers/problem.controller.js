@@ -86,10 +86,61 @@ const getAllProblems = asyncHandler(async (req, res) => {
     ));
 });
 
+const getProblemBySlug = asyncHandler(async (req, res) => {
+    const {slug} = req.params;
+    const problem = await Problem.findOne({slug}).select("-hiddenTestCasesPath -createdBy -updatedAt ");
+
+    if (!problem) {
+        throw new ApiError(404, 'Problem not found');
+    }
+
+    res.status(200)
+    .json(new ApiResponse(
+        200, 'Problem retrieved successfully', problem
+    ));
+});
+
+const updateProblem = asyncHandler(async (req, res) => {
+    // get the problem by id
+    const {id} = req.params;
+    const problem = await Problem.findById(id);
+
+    if (!problem) {
+        throw new ApiError(404, 'Problem not found');
+    }
+
+    // Extract the fields to be updated from the request body
+    const {title, statement, inputFormat, outputFormat, constraints, sampleTestCases, timelimit, memorylimit, difficulty} = req.body;
+    // Atleast one field must be provided for update
+    if ([title, statement, inputFormat, outputFormat, constraints, sampleTestCases, timelimit, memorylimit, difficulty].every(field => field === undefined)) {
+        throw new ApiError(400, 'At least one field must be provided for update');
+    }
+    // Update the problem fields if they are provided in the request body
+    if (title !== undefined && title !== "") problem.title = title;
+    if (statement !== undefined &&  statement !=="") problem.statement = statement;
+    if (inputFormat !== undefined) problem.inputFormat = inputFormat;
+    if (outputFormat !== undefined) problem.outputFormat = outputFormat;
+    if (constraints !== undefined) problem.constraints = constraints;
+    if (sampleTestCases !== undefined) {
+        const parsedSampleTestCases = parseJSONSafe(sampleTestCases);
+        problem.sampleTestCases = parsedSampleTestCases;
+    }
+    if (timelimit !== undefined) problem.timelimit = timelimit;
+    if (memorylimit !== undefined) problem.memorylimit = memorylimit;
+    if (difficulty !== undefined) problem.difficulty = difficulty;
+    
+    
+    // Save the updated problem
+    await problem.save();
+
+    res.status(200).json(new ApiResponse(200, 'Problem updated successfully', problem));
+});
 
 export {
     createProblem,
-    getAllProblems
+    getAllProblems,
+    getProblemBySlug,
+    updateProblem
 };
 
     
