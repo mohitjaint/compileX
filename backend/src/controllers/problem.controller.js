@@ -77,8 +77,19 @@ const createProblem = asyncHandler(async (req, res) => {
     
 });
 
+const getAllProblems = asyncHandler(async (req, res) => {
+
+    const problems = await Problem.find().select("title slug rating difficulty");
+    res.status(200)
+    .json(new ApiResponse(
+        200, 'Problems retrieved successfully', problems
+    ));
+});
+
+
 export {
-    createProblem
+    createProblem,
+    getAllProblems
 };
 
     
