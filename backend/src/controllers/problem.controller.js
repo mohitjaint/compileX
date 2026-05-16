@@ -136,11 +136,61 @@ const updateProblem = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, 'Problem updated successfully', problem));
 });
 
+const updateProblemTestCases = asyncHandler(async (req, res) => {
+    const {id} = req.params;
+    const problem = await Problem.findById(id);
+
+    if (!problem) {
+        throw new ApiError(404, 'Problem not found');
+    }
+
+    // check if hidden test cases file is present
+    if (!req.file) {
+        throw new ApiError(400, 'Hidden test cases file is required');
+    }
+
+    let destinationPath ;
+    try{
+        // process the uploaded hidden test cases file
+        destinationPath = path.join("storage", "testcases", problem._id.toString());
+
+        // extract the new test cases to a temporary location first
+        const tempPath = path.join("storage", "temp", `${problem._id.toString()}_${Date.now()}`);
+        ensureDirectoryExists(tempPath);
+        extractZip(req.file.path, tempPath);
+
+        // delete the old test cases directory if it exists
+        deleteDirectoryIfExists(destinationPath);
+
+        // move the new test cases from the temporary location to the final destination
+        fs.renameSync(tempPath, destinationPath);
+    }
+    catch (error) {
+        // delete the problem if there was an error processing the test cases file
+        deleteDirectoryIfExists(destinationPath);
+
+        throw new ApiError(500, 'An error occurred while processing the hidden test cases file');
+    }
+    finally {
+        // delete the uploaded zip file if it still exists
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+    }
+    
+    // update the problem with the path to the hidden test cases
+    problem.hiddenTestCasesPath = destinationPath;
+    await problem.save();
+
+    res.status(200).json(new ApiResponse(200, 'Problem test cases updated successfully', problem));
+});
+
 export {
     createProblem,
     getAllProblems,
     getProblemBySlug,
-    updateProblem
+    updateProblem,
+    updateProblemTestCases
 };
 
     
