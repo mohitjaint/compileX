@@ -17,6 +17,6 @@ router.get('/:slug', getProblemBySlug);
 
 //secure routes 
 router.post('/create', verifyJWT, adminCheck, uploadTestCases, createProblem);
-router.patch('/:id', verifyJWT, adminCheck, uploadTestCases, updateProblem);
+router.patch('/:id', verifyJWT, adminCheck, updateProblem);
 router.patch('/:id/testcases', verifyJWT, adminCheck, uploadTestCases, updateProblemTestCases);
 export default router;
