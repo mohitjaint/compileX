@@ -78,8 +78,10 @@ const createProblem = asyncHandler(async (req, res) => {
 });
 
 const getAllProblems = asyncHandler(async (req, res) => {
+    //if user is admin, return all problems including archived ones, else return only active problems  
+    const filter = req?.user?.role === 'admin' ? {} : {isActive: true};
+    const problems = await Problem.find(filter).select("-hiddenTestCasesPath -createdBy -updatedAt ").sort({createdAt: -1});
 
-    const problems = await Problem.find().select("title slug rating difficulty");
     res.status(200)
     .json(new ApiResponse(
         200, 'Problems retrieved successfully', problems
@@ -90,7 +92,7 @@ const getProblemBySlug = asyncHandler(async (req, res) => {
     const {slug} = req.params;
     const problem = await Problem.findOne({slug}).select("-hiddenTestCasesPath -createdBy -updatedAt ");
 
-    if (!problem) {
+    if (!problem || (!problem.isActive && req?.user?.role !== 'admin')) {
         throw new ApiError(404, 'Problem not found');
     }
 

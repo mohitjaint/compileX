@@ -7,15 +7,15 @@ import { createProblem,
         updateProblemTestCases,
         archiveProblem,
         unarchiveProblem } from "../controllers/problem.controller.js";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyJWT, optionalVerifyJWT } from "../middlewares/auth.middleware.js";
 import { adminCheck } from "../middlewares/adminCheck.middleware.js";
 import { uploadTestCases } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
 //public routes
-router.get('/all', getAllProblems);
-router.get('/:slug', getProblemBySlug);
+router.get('/all',optionalVerifyJWT, getAllProblems);
+router.get('/:slug',optionalVerifyJWT, getProblemBySlug);
 
 //secure routes 
 router.post('/create', verifyJWT, adminCheck, uploadTestCases, createProblem);
