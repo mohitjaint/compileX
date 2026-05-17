@@ -5,7 +5,8 @@ import { createProblem,
         getProblemBySlug,
         updateProblem,
         updateProblemTestCases,
-        archiveProblem } from "../controllers/problem.controller.js";
+        archiveProblem,
+        unarchiveProblem } from "../controllers/problem.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { adminCheck } from "../middlewares/adminCheck.middleware.js";
 import { uploadTestCases } from "../middlewares/multer.middleware.js";
@@ -21,4 +22,5 @@ router.post('/create', verifyJWT, adminCheck, uploadTestCases, createProblem);
 router.patch('/:id', verifyJWT, adminCheck, updateProblem);
 router.patch('/:id/testcases', verifyJWT, adminCheck, uploadTestCases, updateProblemTestCases);
 router.patch('/:id/archive', verifyJWT, adminCheck, archiveProblem);
+router.patch('/:id/unarchive', verifyJWT, adminCheck, unarchiveProblem);
 export default router;

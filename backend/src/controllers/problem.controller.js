@@ -202,14 +202,30 @@ const archiveProblem = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, 'Problem archived successfully', problem));
 });
 
+const unarchiveProblem = asyncHandler(async (req, res) => {
+    const {id} = req.params;
+    const problem = await Problem.findById(id);
 
+    if (!problem) {
+        throw new ApiError(404, 'Problem not found');
+    }
+    //check if the problem is already active
+    if (problem.isActive) {
+        throw new ApiError(400, 'Problem is already active');
+    }
+    problem.isActive = true;
+    await problem.save();
+
+    res.status(200).json(new ApiResponse(200, 'Problem unarchived successfully', problem));
+});
 export {
     createProblem,
     getAllProblems,
     getProblemBySlug,
     updateProblem,
     updateProblemTestCases,
-    archiveProblem
+    archiveProblem,
+    unarchiveProblem
 };
 
     
