@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { version } from 'mongoose';
 import ApiError from '../utils/ApiError.js';
 const contestSchema = new mongoose.Schema({
     title : {
@@ -49,7 +49,7 @@ const contestSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     }
-},{timestamps: true});
+},{timestamps: true}, {versionKey: false});
 
 contestSchema.pre('validate', function(next) {
     if (this.startTime >= this.endTime) {
