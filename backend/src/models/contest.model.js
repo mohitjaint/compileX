@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-
+import ApiError from '../utils/ApiError.js';
 const contestSchema = new mongoose.Schema({
     title : {
         type: String,
@@ -9,13 +9,29 @@ const contestSchema = new mongoose.Schema({
         type: String,
         required: true
     }, 
-    problems : [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Problem',
-            required: true
-        }
-    ],
+    problems : {
+        type : [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Problem',
+                required: true,
+            }
+        ],
+        validate : [
+            {
+                validator: (value)=> value.length > 0,
+                message: 'A contest must have at least one problem.'
+            },
+            {
+                validator : (value) => {
+                    const uniqueProblems = new Set(value.map(String));
+                    return uniqueProblems.size === value.length;
+                },
+                message: 'Problems in a contest must be unique.'
+            }
+        ]
+    }
+    ,
     startTime : {
         type: Date,
         required: true
@@ -24,7 +40,7 @@ const contestSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
-    creator : {
+    createdBy : {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
@@ -32,13 +48,15 @@ const contestSchema = new mongoose.Schema({
     isPublic : {
         type: Boolean,
         default: true
-    },
-    status : {
-        type: String,
-        enum: ['upcoming', 'ongoing', 'ended'],
-        default: 'upcoming'
     }
 },{timestamps: true});
+
+contestSchema.pre('validate', function(next) {
+    if (this.startTime >= this.endTime) {
+        return next(new ApiError('Start time must be before end time.', 400));
+    }
+    next();
+});
 
 const Contest = mongoose.model('Contest', contestSchema);
 
