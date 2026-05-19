@@ -29,11 +29,13 @@ app.use(cookieParser()); //for cookies
 
 import userRouter from "./routes/user.routes.js";
 import problemRouter from "./routes/problem.routes.js";
+import contestRouter from "./routes/contest.routes.js";
 
 //routes declaration
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/problems", problemRouter);
+app.use("/api/v1/contests", contestRouter);
 
 //error handling middleware
 import errorHandler from "./middlewares/error.middleware.js";
