@@ -33,6 +33,22 @@ const createContest = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, 'Contest created successfully', contest));
 });
 
+const getContests = asyncHandler(async (req, res) => {
+
+    // If the user is an admin, return all contests. Otherwise, return only public contests 
+    let filter = {isPublic: true};
+    if (req?.user?.role === 'admin') {
+        filter = {}; 
+    } 
+    const contests = await Contest
+        .find(filter)
+        .sort({ createdAt: -1 })
+        .select('title startTime endTime isPublic'); 
+
+    res.status(200).json(new ApiResponse(200, 'Contests retrieved successfully', contests));
+});
+
 export { 
-    createContest 
+    createContest,
+    getContests
 };
