@@ -1,5 +1,5 @@
 import mongoose, { version } from 'mongoose';
-import ApiError from '../utils/ApiError.js';
+import {ApiError} from '../utils/ApiError.js';
 const contestSchema = new mongoose.Schema({
     title : {
         type: String,
@@ -49,13 +49,12 @@ const contestSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     }
-},{timestamps: true}, {versionKey: false});
+},{timestamps: true, versionKey: false});
 
-contestSchema.pre('validate', function(next) {
+contestSchema.pre('validate', async function() {
     if (this.startTime >= this.endTime) {
-        return next(new ApiError('Start time must be before end time.', 400));
+        throw new ApiError(400, 'Start time must be before end time.');
     }
-    next();
 });
 
 const Contest = mongoose.model('Contest', contestSchema);
