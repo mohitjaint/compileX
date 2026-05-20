@@ -48,7 +48,23 @@ const getContests = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, 'Contests retrieved successfully', contests));
 });
 
+const getContestById = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const contest = await Contest.findById(id).populate('problems', 'title difficulty slug');
+    if (!contest || (!contest.isPublic && req?.user?.role !== 'admin')) {
+        throw new ApiError(404, 'Contest not found');
+    }
+
+    // If the contest is not started yet, only admins can view it
+    if (new Date() < contest.startTime && req?.user?.role !== 'admin') {
+        throw new ApiError(403, 'Contest has not started yet');
+    }
+
+    res.status(200).json(new ApiResponse(200, 'Contest retrieved successfully', contest));
+});
+
 export { 
     createContest,
-    getContests
+    getContests,
+    getContestById
 };
