@@ -63,8 +63,48 @@ const getContestById = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, 'Contest retrieved successfully', contest));
 });
 
+const updateContest = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { title, description, problems, startTime, endTime, isPublic } = req.body;
+
+    // If no fields are provided, return an error
+    if([title, description, problems, startTime, endTime, isPublic].every(field => field === undefined)) {
+        throw new ApiError(400, 'At least one field is required to update');
+    }
+
+    // Verify if all problems exist and are active
+    if(problems !== undefined) {
+        const validProblems = await Problem.find({ _id: { $in: problems }, isActive: true });
+        if (validProblems.length !== problems.length) {
+            throw new ApiError(400, 'One or more problems are invalid or inactive');
+        }
+    }
+
+    const contest = await Contest.findById(id);
+    if (!contest) {
+        throw new ApiError(404, 'Contest not found');
+    }
+
+    // If the contest has already started, deny updates
+    if (new Date() >= contest.startTime) {
+        throw new ApiError(403, 'Cannot update a contest that has already started');
+    }
+
+    // Update fields if they are provided
+    if (title !== undefined) contest.title = title;
+    if (description !== undefined) contest.description = description;
+    if (problems !== undefined) contest.problems = problems;
+    if (startTime !== undefined) contest.startTime = startTime;
+    if (endTime !== undefined) contest.endTime = endTime;
+    if (isPublic !== undefined) contest.isPublic = isPublic;
+
+    await contest.save();
+    res.status(200).json(new ApiResponse(200, 'Contest updated successfully', contest));
+});
+
 export { 
     createContest,
     getContests,
-    getContestById
+    getContestById,
+    updateContest
 };
