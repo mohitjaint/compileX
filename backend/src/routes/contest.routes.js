@@ -3,7 +3,8 @@ import {
     createContest,
     getContests,
     getContestById,
-    updateContest
+    updateContest,
+    deleteContest
 } from "../controllers/contest.controller.js";
 import { verifyJWT, optionalVerifyJWT } from "../middlewares/auth.middleware.js";
 import { adminCheck } from "../middlewares/adminCheck.middleware.js";
@@ -15,5 +16,6 @@ router.get('/:id', optionalVerifyJWT, getContestById);
 //secure routes 
 router.post('/create', verifyJWT, adminCheck, createContest);
 router.patch('/:id', verifyJWT, adminCheck, updateContest);
+router.delete('/:id', verifyJWT, adminCheck, deleteContest);
 
 export default router;

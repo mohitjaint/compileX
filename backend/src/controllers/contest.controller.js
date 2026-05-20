@@ -102,9 +102,26 @@ const updateContest = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, 'Contest updated successfully', contest));
 });
 
+const deleteContest = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const contest = await Contest.findById(id);
+    if (!contest) {
+        throw new ApiError(404, 'Contest not found');
+    }
+
+    // If the contest has already started, and it is not ended yet, deny deletion
+    if (new Date() >= contest.startTime && new Date() < contest.endTime) {
+        throw new ApiError(403, 'Cannot delete a contest that is currently running');
+    }
+
+    await contest.deleteOne();
+    res.status(200).json(new ApiResponse(200, 'Contest deleted successfully'));
+});
+
 export { 
     createContest,
     getContests,
     getContestById,
-    updateContest
+    updateContest,
+    deleteContest
 };
