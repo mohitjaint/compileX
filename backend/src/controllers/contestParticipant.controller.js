@@ -1,0 +1,34 @@
+import {ApiError} from '../utils/ApiError.js';
+import {ApiResponse} from '../utils/ApiResponse.js';
+import {asyncHandler} from '../utils/asyncHandler.js';
+import ContestParticipant from '../models/contestParticipant.model.js';
+import Contest from '../models/contest.model.js';
+
+const registerForContest = asyncHandler(async (req, res) => {
+    const { contestId } = req.params;
+    const userId = req.user._id;
+    // Check if the contest exists and is public
+    const contest = await Contest.findById(contestId);
+    if (!contest || !contest.isPublic ) {
+        throw new ApiError(404, 'Contest not found');
+    }
+
+    // Check if the contest has ended
+    if (new Date() > contest.endTime) {
+        throw new ApiError(400, 'Contest has already ended');
+    }
+    // Check if the user is already registered for the contest
+    const existingParticipant = await ContestParticipant.findOne({ contest: contestId, user: userId });
+    if (existingParticipant) {
+        throw new ApiError(400, 'User is already registered for this contest');
+    }
+
+    const participant = new ContestParticipant({ contest: contestId, user: userId });
+    await participant.save();
+
+    res.status(201).json(new ApiResponse(201, 'Registered for contest successfully', participant));
+});
+
+export { 
+    registerForContest
+};

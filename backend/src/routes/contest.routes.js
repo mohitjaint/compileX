@@ -18,4 +18,10 @@ router.post('/create', verifyJWT, adminCheck, createContest);
 router.patch('/:id', verifyJWT, adminCheck, updateContest);
 router.delete('/:id', verifyJWT, adminCheck, deleteContest);
 
+
+// contest participant routes
+import { registerForContest } from "../controllers/contestParticipant.controller.js";
+
+router.post('/:contestId/register',verifyJWT, registerForContest);
+
 export default router;
