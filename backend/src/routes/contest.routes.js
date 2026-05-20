@@ -20,8 +20,9 @@ router.delete('/:id', verifyJWT, adminCheck, deleteContest);
 
 
 // contest participant routes
-import { registerForContest } from "../controllers/contestParticipant.controller.js";
+import { registerForContest, deleteContestParticipant } from "../controllers/contestParticipant.controller.js";
 
 router.post('/:contestId/register',verifyJWT, registerForContest);
+router.delete('/:contestId/unregister', verifyJWT, deleteContestParticipant);
 
 export default router;

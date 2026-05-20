@@ -29,6 +29,34 @@ const registerForContest = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, 'Registered for contest successfully', participant));
 });
 
+
+const deleteContestParticipant = asyncHandler(async (req, res) => {
+    const { contestId } = req.params;
+    const userId = req.user._id;
+
+    // Check if the contest exists
+    const contest = await Contest.findById(contestId);
+    if (!contest) {
+        throw new ApiError(404, 'Contest not found');
+    }
+    
+    // Check if the user is registered for the contest
+    const participant = await ContestParticipant.findOne({ contest: contestId, user: userId });
+    if (!participant) {
+        throw new ApiError(404, 'User is not registered for this contest');
+    }
+
+    // check if the conest has started
+    if (new Date() >= contest.startTime) {
+        throw new ApiError(400, 'Contest has already started, cannot unregister');
+    }
+
+    await participant.deleteOne();
+    
+    res.status(200).json(new ApiResponse(200, 'Unregistered from contest successfully'));
+});
+
 export { 
-    registerForContest
+    registerForContest,
+    deleteContestParticipant
 };
