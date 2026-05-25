@@ -11,6 +11,11 @@ const submissionSchema = new mongoose.Schema({
         ref: 'Problem',
         required: true
     },
+    contest :{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Contest',
+        required: true
+    },
     language : {
         type: String,
         required: true,
@@ -23,7 +28,6 @@ const submissionSchema = new mongoose.Schema({
     },
     status : {
         type: String,
-        required: true,
         enum: [
             'Pending',
             'Judging',
@@ -34,7 +38,6 @@ const submissionSchema = new mongoose.Schema({
     },
     verdict : {
         type: String,        
-        required: true,
         enum: [
             'Accepted',
             'Wrong Answer',
@@ -47,19 +50,26 @@ const submissionSchema = new mongoose.Schema({
     },
     executionTime : {
         type: Number,
-        required: true,
-        default: 0
+        default: null
     },
     memoryUsed : {
         type: Number,
-        required: true,
-        default: 0
-    },
-    submittedAt : {
-        type: Date,
-        default: Date.now
+        default: null
     }
 }, {timestamps: true});
+
+submissionSchema.index({
+    user: 1,
+    submittedAt: -1
+});
+
+submissionSchema.index({
+    problem: 1
+});
+
+submissionSchema.index({
+    contest: 1
+});
 
 const Submission = mongoose.model('Submission', submissionSchema);
 
