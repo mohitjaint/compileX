@@ -18,7 +18,8 @@ const submissionSchema = new mongoose.Schema({
     },
     code : {
         type: String,
-        required: true
+        required: true,
+        maxlength: 100000 // 100 KB
     },
     status : {
         type: String,
@@ -29,7 +30,7 @@ const submissionSchema = new mongoose.Schema({
             'Completed',
             'Failed'
         ],
-        default: null
+        default: 'Pending'
     },
     verdict : {
         type: String,        
@@ -46,11 +47,13 @@ const submissionSchema = new mongoose.Schema({
     },
     executionTime : {
         type: Number,
-        required: true
+        required: true,
+        default: 0
     },
     memoryUsed : {
         type: Number,
-        required: true
+        required: true,
+        default: 0
     },
     submittedAt : {
         type: Date,
