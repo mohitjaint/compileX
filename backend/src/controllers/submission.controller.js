@@ -65,6 +65,24 @@ const submitSolution = asyncHandler(async (req, res) => {
     
 });
 
+const getSubmission = asyncHandler(async (req, res) => {
+    const submissionId = req.params.submissionId;
+
+    const submission = await Submission.findById(submissionId)  
+
+    if (!submission) {
+        throw new ApiError(404, 'Submission not found.');
+    }
+
+    // Ensure the user can only view their own submissions or if they are an admin
+    if (!submission.user.equals(req.user._id) && !req.user.role === 'admin') {
+        throw new ApiError(403, 'You do not have permission to view this submission.');
+    }
+
+    res.status(200).json(new ApiResponse(200, 'Submission retrieved successfully.', { submission }));
+});
+
 export {
-    submitSolution
+    submitSolution,
+    getSubmission
  };
