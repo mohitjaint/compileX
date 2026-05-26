@@ -25,4 +25,10 @@ import { registerForContest, deleteContestParticipant } from "../controllers/con
 router.post('/:contestId/register',verifyJWT, registerForContest);
 router.delete('/:contestId/unregister', verifyJWT, deleteContestParticipant);
 
+
+// submission routes
+import { submitSolution } from "../controllers/submission.controller.js";
+
+router.post('/:contestId/submit', verifyJWT, submitSolution);
+
 export default router;
