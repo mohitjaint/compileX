@@ -56,7 +56,7 @@ const submissionSchema = new mongoose.Schema({
         type: Number,
         default: null
     }
-}, {timestamps: true});
+}, {timestamps: true, versionKey: false});
 
 submissionSchema.index({
     user: 1,
