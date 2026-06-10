@@ -5,7 +5,7 @@ import Problem from "../models/problem.model.js";
 import {ApiError} from '../utils/ApiError.js';
 import {ApiResponse} from '../utils/ApiResponse.js';
 import {asyncHandler} from '../utils/asyncHandler.js';
-
+import { judgeSubmission } from "../services/judge.service.js";
 
 const submitSolution = asyncHandler(async (req, res) => {
     const { problemId, language, code } = req.body;
@@ -59,8 +59,12 @@ const submitSolution = asyncHandler(async (req, res) => {
         code
     });
 
+    // Save the submission to the database
     await submission.save();
 
+    // Call the judge service to evaluate the submission
+    judgeSubmission(submission._id);
+    
     res.status(201).json(new ApiResponse(201, 'Submission created successfully.', { submissionId: submission._id }));
     
 });
