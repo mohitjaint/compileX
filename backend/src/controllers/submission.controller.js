@@ -86,7 +86,25 @@ const getSubmission = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, 'Submission retrieved successfully.', { submission }));
 });
 
+const getMySubmissions = asyncHandler(async (req, res) => {
+    const submissions = await Submission.find({
+        user: req.user._id
+    })
+        .sort({ createdAt: -1 })
+        .populate('problem', 'title')
+        .populate('contest', 'name');
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            'Submissions retrieved successfully.',
+            { submissions }
+        )
+    );
+});
+
 export {
     submitSolution,
-    getSubmission
+    getSubmission,
+    getMySubmissions
  };
