@@ -1,4 +1,3 @@
-import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
 
 type LoadingScreenProps = {
@@ -22,8 +21,14 @@ function LoadingScreen({
       <div className="absolute -bottom-28 right-0 h-72 w-72 rounded-full bg-accent/10 blur-3xl" />
 
       <div className="relative flex flex-col items-center gap-4 rounded-2xl border border-border/70 bg-card/80 px-8 py-7 shadow-2xl backdrop-blur-md">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-primary/25 bg-primary/10">
-          <Spinner className="size-5 text-primary" />
+        <div
+          className="flex h-12 items-center justify-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-4"
+          role="status"
+          aria-label="Loading"
+        >
+          <span className="size-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+          <span className="size-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+          <span className="size-2 rounded-full bg-primary animate-bounce" />
         </div>
         <p className="text-sm font-medium tracking-[0.24em] text-muted-foreground uppercase">
           {message}
