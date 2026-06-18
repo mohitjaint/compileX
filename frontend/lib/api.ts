@@ -15,6 +15,12 @@ export async function apiFetch(
             },
         }
     );
+    const contentType = response.headers.get("content-type");
+
+    if (!contentType?.includes("application/json")) {
+        const text = await response.text();
+        throw new Error(`Expected JSON but received:\n${text}`);
+    }
 
     const data = await response.json();
 
