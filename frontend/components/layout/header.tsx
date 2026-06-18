@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Terminal, Menu, X } from "lucide-react"
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard" },
   { name: "Contests", href: "/contests" },
   { name: "Problems", href: "/problems" },
   { name: "Leaderboard", href: "/leaderboard" },
