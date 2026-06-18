@@ -129,6 +129,7 @@ const rotateTokens = asyncHandler(async (req, res) => {
     res.status(200)
     .cookie('refreshToken', newRefreshToken, options)
     .json(new ApiResponse(200, 'Tokens rotated successfully', {
+        user,
         accessToken
     }));
 });
