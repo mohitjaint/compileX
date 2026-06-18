@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 import { AuthProvider } from '@/context/AuthContext'
+import AuthGate from '@/components/auth/AuthGate'
 
 export const metadata: Metadata = {
   title: 'CompileX - Distributed Competitive Programming Judge',
@@ -37,7 +38,9 @@ export default function RootLayout({
     <html lang="en" className="bg-background">
       <body className="font-sans antialiased min-h-screen">
         <AuthProvider>
-          {children}
+          <AuthGate>
+            {children}
+          </AuthGate>
         </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

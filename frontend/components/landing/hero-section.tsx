@@ -3,10 +3,13 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Zap, Server, Users } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
+import { useEffect } from "react"
 
 export function HeroSection() {
   const { user } = useAuth();
-  {console.log("Current user in HeroSection:", user)}
+  useEffect(() => {
+      console.log("Hero user changed:", user);
+  }, [user]);
   return (
     <section className="relative overflow-hidden px-4 py-20 lg:px-8 lg:py-32">
       {/* Background gradient */}
