@@ -3,6 +3,8 @@ import { Analytics } from '@vercel/analytics/next'
 
 import './globals.css'
 
+import { AuthProvider } from '@/context/AuthContext'
+
 export const metadata: Metadata = {
   title: 'CompileX - Distributed Competitive Programming Judge',
   description: 'A scalable distributed competitive programming judge system with real-time judging, live leaderboards, and contest management.',
@@ -34,7 +36,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-background">
       <body className="font-sans antialiased min-h-screen">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

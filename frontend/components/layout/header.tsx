@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Terminal, Menu, X } from "lucide-react"
 
 const navigation = [
+  { name: "Dashboard", href: "/dashboard" },
   { name: "Contests", href: "/contests" },
+  { name: "Problems", href: "/problems" },
   { name: "Leaderboard", href: "/leaderboard" },
   { name: "Submissions", href: "/submissions" },
   { name: "Admin", href: "/admin" },
@@ -76,10 +78,10 @@ export function Header() {
             ))}
             <div className="flex flex-col gap-2 pt-3">
               <Button variant="ghost" size="sm" asChild>
-                <Link href="/login">Sign In</Link>
+                <Link href="/auth/login">Sign In</Link>
               </Button>
               <Button size="sm" asChild>
-                <Link href="/register">Get Started</Link>
+                <Link href="/auth/register">Get Started</Link>
               </Button>
             </div>
           </div>

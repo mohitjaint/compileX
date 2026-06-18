@@ -1,8 +1,12 @@
+"use client";
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Zap, Server, Users } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
 
 export function HeroSection() {
+  const { user } = useAuth();
+  {console.log("Current user in HeroSection:", user)}
   return (
     <section className="relative overflow-hidden px-4 py-20 lg:px-8 lg:py-32">
       {/* Background gradient */}
@@ -13,7 +17,7 @@ export function HeroSection() {
       <div className="relative mx-auto max-w-4xl text-center">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-4 py-1.5 text-sm">
           <span className="flex h-2 w-2 rounded-full bg-primary" />
-          <span className="text-muted-foreground">Distributed Judge System</span>
+          {user ? `Welcome back, ${user.username}!` : "Welcome to CompileX!"}
         </div>
         
         <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
