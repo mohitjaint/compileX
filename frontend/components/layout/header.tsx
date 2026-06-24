@@ -3,7 +3,9 @@
 import Link from "next/link"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Terminal, Menu, X } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
 
 const navigation = [
   { name: "Contests", href: "/contests" },
@@ -15,6 +17,28 @@ const navigation = [
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || '';
+  const resolveAvatarUrl = (avatarUrl?: string) => {
+    if (!avatarUrl) {
+      return '';
+    }
+
+    if (avatarUrl.startsWith('http')) {
+      return avatarUrl;
+    }
+
+    return `${BACKEND_BASE_URL}/${avatarUrl}`.replace(/([^:]\/)\/+/g, '$1');
+  }
+  const { user } = useAuth()
+  const initials = user?.fullName
+    ? user.fullName
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase())
+        .join("")
+    : user?.username?.slice(0, 2).toUpperCase()
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
@@ -40,14 +64,32 @@ export function Header() {
           </div>
         </div>
 
-        <div className="hidden md:flex md:items-center md:gap-3">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/login">Sign In</Link>
-          </Button>
-          <Button size="sm" asChild>
-            <Link href="/register">Get Started</Link>
-          </Button>
-        </div>
+        {!user && (
+          <div className="hidden md:flex md:items-center md:gap-3">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/login">Sign In</Link>
+            </Button>
+            <Button size="sm" asChild>
+              <Link href="/register">Get Started</Link>
+            </Button>
+          </div>
+        )}
+
+        {user && (
+          <div className="hidden md:flex md:items-center md:gap-3">
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/profile" aria-label="Edit profile">
+                <Avatar className="size-8 border border-border">
+                  <AvatarImage src={resolveAvatarUrl(user.avatarUrl)} alt={user.fullName} />
+                  <AvatarFallback>{initials}</AvatarFallback>
+                </Avatar>
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/logout">Logout</Link>
+            </Button>
+          </div>
+        )}
 
         <button
           type="button"
@@ -75,14 +117,32 @@ export function Header() {
                 {item.name}
               </Link>
             ))}
-            <div className="flex flex-col gap-2 pt-3">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/auth/login">Sign In</Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link href="/auth/register">Get Started</Link>
-              </Button>
-            </div>
+            {!user && (
+              <div className="flex flex-col gap-2 pt-3">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/login">Sign In</Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link href="/register">Get Started</Link>
+                </Button>
+              </div>
+            )}
+            {user && (
+              <div className="flex flex-col gap-2 pt-3">
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/profile">
+                    <Avatar className="mr-2 size-5">
+                      <AvatarImage src={user.avatarUrl} alt={user.fullName} />
+                      <AvatarFallback>{initials}</AvatarFallback>
+                    </Avatar>
+                    Profile
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/logout">Logout</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}

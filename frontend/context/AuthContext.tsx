@@ -3,7 +3,8 @@ import {  useEffect } from "react";
 import { createContext, useContext, useState } from "react";
 import { ReactNode } from "react";
 import { apiFetch } from "@/lib/api";
-import { set } from "date-fns";
+import * as authStore from '@/lib/authStore'
+import { useRouter } from 'next/navigation'
 
 type User = {
     _id: string;
@@ -18,9 +19,7 @@ type User = {
 
 type AuthContextType = {
     accessToken: string | null;
-    setAccessToken: React.Dispatch<
-        React.SetStateAction<string | null>
-    >;
+    setAccessToken: (token: string | null) => void;
 
     user : User| null;
     setUser: React.Dispatch<
@@ -29,7 +28,8 @@ type AuthContextType = {
 
     loading: boolean;
 
-    rotateToken: () => Promise<void>;
+    rotateToken: () => Promise<string | null>;
+    logout: () => Promise<void>;
 };
 
 const AuthContext =
@@ -41,9 +41,20 @@ type AuthProviderProps = {
 
 export const AuthProvider = ({ children } : AuthProviderProps) => {
 
-    const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [accessTokenRaw, setAccessTokenRaw] = useState<string | null>(null);
+    const router = useRouter()
+
+    const setAccessToken = (token: string | null) => {
+        setAccessTokenRaw(token)
+        authStore.setAccessToken(token)
+    }
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+
+    const clearAuthState = () => {
+        setAccessToken(null);
+        setUser(null);
+    };
 
     const rotateToken = async()  => {
         try{
@@ -59,11 +70,16 @@ export const AuthProvider = ({ children } : AuthProviderProps) => {
             
             setAccessToken(response.data.accessToken);
             setUser(response.data.user);
+            return response.data.accessToken ?? null;
         }
-        catch(err) {
-            console.error('Error rotating token:', err);
-            setAccessToken(null);
-            setUser(null);
+        catch(err: any) {
+            if (err?.message === 'Unauthorized') {
+                console.log('No active session / refresh token found.');
+            } else {
+                console.error('Error rotating token:', err);
+            }
+            clearAuthState();
+            return null;
         }
         finally{
             setLoading(false);
@@ -71,19 +87,40 @@ export const AuthProvider = ({ children } : AuthProviderProps) => {
         
     }
 
+    const logout = async () => {
+        try {
+            await apiFetch('/users/logout', { method: 'POST' })
+        } catch (err) {
+            console.error('Error logging out:', err);
+        } finally {
+            clearAuthState();
+        }
+    }
+
     useEffect(() => {
         // On component mount, try to rotate token to get a new access token
         rotateToken();
+        // register rotate/clear hooks for non-react modules
+        authStore.setRotateToken(rotateToken)
+        authStore.setClearAuth(() => {
+            clearAuthState()
+            try {
+                router.replace('/login')
+            } catch (err) {
+                // ignore
+            }
+        })
     }, []);
 
     return (
         <AuthContext.Provider
             value={{
-                accessToken,
+                accessToken: accessTokenRaw,
                 setAccessToken,
                 user,
                 setUser,
                 rotateToken,
+                logout,
                 loading,
             }}
         >

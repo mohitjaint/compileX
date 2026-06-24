@@ -147,7 +147,7 @@ export default function LoginPage() {
             </div>
 
             {/* Sign Up Link */}
-            <Link href="/auth/register">
+            <Link href="/register">
               <Button
                 variant="outline"
                 className="w-full border-border/50 hover:bg-background/50"
