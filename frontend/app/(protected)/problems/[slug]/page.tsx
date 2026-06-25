@@ -13,9 +13,6 @@ const languages = [
   { id: "cpp", name: "C++17", extension: "cpp" },
   { id: "python", name: "Python 3", extension: "py" },
   { id: "java", name: "Java 17", extension: "java" },
-  { id: "javascript", name: "JavaScript", extension: "js" },
-  { id: "go", name: "Go", extension: "go" },
-  { id: "rust", name: "Rust", extension: "rs" },
 ]
 
 const defaultCode = `#include <bits/stdc++.h>
@@ -40,6 +37,12 @@ export default function ProblemPage() {
   const [copied, setCopied] = useState(false)
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo") ?? "/problems";
+  const contestId = searchParams.get("contestId");
+  const languageMap: Record<string, string> = {
+    cpp: "C++",
+    java: "Java",
+    python: "Python",
+  };
 
   useEffect(
     ()=>{
@@ -74,10 +77,82 @@ export default function ProblemPage() {
     setOutput("Running test cases...\n\nTest Case 1: Passed\nTest Case 2: Passed\n\nAll test cases passed!")
   }
 
-  const handleSubmit = () => {
-    setActivePanel("output")
-    setOutput("Submitting solution...\n\nJudging...\n\nVerdict: Accepted\nTime: 12ms\nMemory: 8.2 MB")
-  }
+  const pollSubmission = (submissionId: string) => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await apiFetch(`/submissions/${submissionId}`);
+
+        const submission = res.data.submission;
+
+        if (
+          submission.status === "Pending" ||
+          submission.status === "Judging"
+        ) {
+          setOutput(
+  `Status: ${submission.status}
+
+  Waiting for judge...`
+          );
+
+          return;
+        }
+
+        clearInterval(interval);
+
+        setOutput(
+  `Verdict: ${submission.verdict}
+
+  Time: ${submission.executionTime ?? "-"} ms
+
+  Memory: ${submission.memoryUsed ?? "-"} MB`
+        );
+      } catch (err: any) {
+        clearInterval(interval);
+        setOutput(err.message);
+      }
+    }, 1500);
+  };
+  const handleSubmit = async () => {
+    if (!contestId) {
+      setActivePanel("output");
+      setOutput("Submissions are only available inside contests.");
+      return;
+    }
+
+    const language = languageMap[selectedLanguage];
+
+    if (!language) {
+      setActivePanel("output");
+      setOutput("This language is not supported yet.");
+      return;
+    }
+
+    try {
+      setActivePanel("output");
+      setOutput("Submitting solution...");
+
+      const submitRes = await apiFetch(
+        `/contests/${contestId}/submit`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            problemId: problem._id,
+            language,
+            code,
+          }),
+        }
+      );
+
+      const submissionId = submitRes.data.submissionId;
+
+      setOutput(`Submission queued...\nSubmission ID: ${submissionId}`);
+
+      pollSubmission(submissionId);
+
+    } catch (err: any) {
+      setOutput(err.message);
+    }
+  };
 
   return (
     <div className="flex h-[calc(100vh-65px)] flex-col">

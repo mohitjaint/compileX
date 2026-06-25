@@ -79,7 +79,7 @@ const getSubmission = asyncHandler(async (req, res) => {
     }
 
     // Ensure the user can only view their own submissions or if they are an admin
-    if (!submission.user.equals(req.user._id) && !req.user.role === 'admin') {
+    if (!submission.user.equals(req.user._id) && req.user.role !== 'admin') {
         throw new ApiError(403, 'You do not have permission to view this submission.');
     }
 
