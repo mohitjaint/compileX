@@ -209,7 +209,15 @@ export default function ContestPage({ params }: { params: Promise<{ id: string }
                     {String.fromCharCode(65 + index)}
                   </td>
                   <td className="px-6 py-4">
-                    <Link href={`/problems/${problem.slug}`} className="font-medium hover:text-primary transition-colors">
+                    <Link
+                      href={{
+                        pathname: `/problems/${problem.slug}`,
+                        query: {
+                          returnTo: `/contests/${contest._id}`,
+                        },
+                      }}
+                      className="font-medium hover:text-primary transition-colors"
+                    >
                       {problem.title}
                     </Link>
                   </td>
