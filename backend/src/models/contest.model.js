@@ -12,9 +12,16 @@ const contestSchema = new mongoose.Schema({
     problems : {
         type : [
             {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Problem',
-                required: true,
+                problem : {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'Problem',
+                    required: true
+                },
+                points : {
+                    type: Number,
+                    required: true,
+                    min: 1
+                }
             }
         ],
         validate : [
