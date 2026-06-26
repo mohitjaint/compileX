@@ -50,7 +50,10 @@ const getContests = asyncHandler(async (req, res) => {
 
 const getContestById = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const contest = await Contest.findById(id).populate('problems', 'title difficulty slug');
+    const contest = await Contest.findById(id).populate({
+        path: 'problems.problem',
+        select: 'title difficulty isActive slug'
+    });
     if (!contest || (!contest.isPublic && req?.user?.role !== 'admin')) {
         throw new ApiError(404, 'Contest not found');
     }

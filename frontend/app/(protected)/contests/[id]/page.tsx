@@ -8,10 +8,13 @@ import { Calendar, Clock, Lock, Unlock, Timer, Loader2, AlertTriangle } from 'lu
 import { apiFetch } from '@/lib/api'
 
 interface Problem {
-  _id: string
-  title: string
-  difficulty: 'Easy' | 'Medium' | 'Hard'
-  slug: string
+  problem : {
+     _id: string
+    title: string
+    difficulty: 'Easy' | 'Medium' | 'Hard'
+    slug: string
+  },
+  points: number
 }
 
 interface Contest {
@@ -70,6 +73,7 @@ export default function ContestPage({ params }: { params: Promise<{ id: string }
     setError('')
     try {
       const response = await apiFetch(`/contests/${id}`)
+      console.log('Fetched contest details:', response.data)
       setContest(response.data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load contest details')
@@ -199,29 +203,32 @@ export default function ContestPage({ params }: { params: Promise<{ id: string }
                 <th className="px-6 py-4 font-medium w-16">#</th>
                 <th className="px-6 py-4 font-medium">Problem</th>
                 <th className="px-6 py-4 font-medium">Difficulty</th>
+                <th className="px-6 py-4 font-medium">Points</th>
                 <th className="px-6 py-4 font-medium text-right w-24">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {contest.problems.map((problem, index) => (
-                <tr key={problem._id} className="hover:bg-secondary/30 transition-colors">
+              {contest.problems.map((object, index) => (
+                <tr key={object.problem._id} className="hover:bg-secondary/30 transition-colors">
                   <td className="px-6 py-4 font-mono font-medium">
                     {String.fromCharCode(65 + index)}
                   </td>
                   <td className="px-6 py-4">
                     <Link
-                       href={`/problems/${problem.slug}?contestId=${contest._id}&returnTo=/contests/${contest._id}`}
+                       href={`/problems/${object.problem.slug}?contestId=${contest._id}&returnTo=/contests/${contest._id}`}
                       className="font-medium hover:text-primary transition-colors"
                     >
-                      {problem.title}
+                      {object.problem.title}
                     </Link>
                   </td>
-                  <td className={`px-6 py-4 font-medium ${difficultyColors[problem.difficulty]}`}>
-                    {problem.difficulty}
+                  <td className={`px-6 py-4 font-medium ${difficultyColors[object.problem.difficulty]}`}>
+                    {object.problem.difficulty}
+                  </td>
+                  <td className="px-6 py-4 font-mono font-medium">{object.points}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <Button size="sm" asChild>
-                      <Link href={`/problems/${problem.slug}`}>
+                      <Link href={`/problems/${object.problem.slug}`}>
                         Solve
                       </Link>
                     </Button>
