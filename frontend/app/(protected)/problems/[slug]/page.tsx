@@ -8,6 +8,11 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, Play, Send, RotateCcw, Settings, Copy, CheckCircle2 } from "lucide-react"
 import Editor from "@monaco-editor/react";
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+} from "react-resizable-panels";
 
 
 const languages = [
@@ -182,127 +187,239 @@ export default function ProblemPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
+      <PanelGroup direction="horizontal" className="flex-1">
+
         {/* Problem Statement */}
-        <div className="w-1/2 overflow-auto border-r border-border p-6">
-          <div className="prose prose-invert max-w-none">
-            <h2 className="text-xl font-semibold">Problem Statement</h2>
-            <p className="text-muted-foreground whitespace-pre-wrap">{problem.statement}</p>
-            <h3 className="mt-6 text-lg font-semibold">Input Format</h3><p className="whitespace-pre-wrap">{problem.inputFormat}</p>
-            <h3 className="mt-6 text-lg font-semibold">Output Format</h3><p className="whitespace-pre-wrap">{problem.outputFormat}</p>
-            <h3 className="mt-6 text-lg font-semibold">Constraints</h3><p className="whitespace-pre-wrap">{problem.constraints}</p>
-            <h3 className="mt-6 text-lg font-semibold">Examples</h3>
-            {problem.sampleTestCases?.map((sample:any,index:number)=>(<div key={index} className="mt-4 rounded-lg border border-border bg-secondary/30 p-4"><div className="mb-2 text-sm font-medium">Example {index+1}</div><div className="font-mono text-sm"><div><span className="text-muted-foreground">Input:</span><pre>{sample.input}</pre></div><div><span className="text-muted-foreground">Output:</span><pre>{sample.output}</pre></div></div></div>))}
-</div>
-        </div>
+        <Panel defaultSize={45} minSize={25}>
+          <div className="h-full overflow-auto border-r border-border p-6">
+            <div className="prose prose-invert max-w-none">
+              <h2 className="text-xl font-semibold">Problem Statement</h2>
 
-        {/* Code Editor */}
-        <div className="flex w-1/2 flex-col">
-          {/* Editor Header */}
-          <div className="flex items-center justify-between border-b border-border bg-card px-4 py-2">
-            <select
-              value={selectedLanguage}
-              onChange={(e) => setSelectedLanguage(e.target.value)}
-              className="rounded border border-border bg-secondary px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {languages.map((lang) => (
-                <option key={lang.id} value={lang.id}>
-                  {lang.name}
-                </option>
+              <p className="text-muted-foreground whitespace-pre-wrap">
+                {problem.statement}
+              </p>
+
+              <h3 className="mt-6 text-lg font-semibold">
+                Input Format
+              </h3>
+
+              <p className="whitespace-pre-wrap">
+                {problem.inputFormat}
+              </p>
+
+              <h3 className="mt-6 text-lg font-semibold">
+                Output Format
+              </h3>
+
+              <p className="whitespace-pre-wrap">
+                {problem.outputFormat}
+              </p>
+
+              <h3 className="mt-6 text-lg font-semibold">
+                Constraints
+              </h3>
+
+              <p className="whitespace-pre-wrap">
+                {problem.constraints}
+              </p>
+
+              <h3 className="mt-6 text-lg font-semibold">
+                Examples
+              </h3>
+
+              {problem.sampleTestCases?.map((sample: any, index: number) => (
+                <div
+                  key={index}
+                  className="mt-4 rounded-lg border border-border bg-secondary/30 p-4"
+                >
+                  <div className="mb-2 text-sm font-medium">
+                    Example {index + 1}
+                  </div>
+
+                  <div className="font-mono text-sm">
+                    <div>
+                      <span className="text-muted-foreground">
+                        Input:
+                      </span>
+
+                      <pre>{sample.input}</pre>
+                    </div>
+
+                    <div>
+                      <span className="text-muted-foreground">
+                        Output:
+                      </span>
+
+                      <pre>{sample.output}</pre>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </select>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={handleCopy}>
-                {copied ? <CheckCircle2 className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setCode(defaultCode)}>
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm">
-                <Settings className="h-4 w-4" />
-              </Button>
             </div>
           </div>
+        </Panel>
 
-          {/* Code Area */}
-          <div className="flex-1 overflow-hidden">
-            <Editor
-              height="100%"
-              language={selectedLanguage === "cpp" ? "cpp" : selectedLanguage}
-              theme="vs-dark"
-              value={code}
-              onChange={(value) => setCode(value ?? "")}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                tabSize: 4,
-                insertSpaces: true,
-                automaticLayout: true,
-                scrollBeyondLastLine: false,
-                wordWrap: "on",
-                fontFamily: "JetBrains Mono, monospace",
-                autoClosingBrackets: "always",
-                autoClosingQuotes: "always",
-                formatOnPaste: true,
-                formatOnType: true,
-              }}
-            />
-          </div>
+        <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors" />
 
-          {/* Input/Output Panel */}
-          <div className="h-48 border-t border-border">
-            <div className="flex border-b border-border">
-              <button
-                onClick={() => setActivePanel("input")}
-                className={`px-4 py-2 text-sm font-medium ${
-                  activePanel === "input" ? "border-b-2 border-primary text-foreground" : "text-muted-foreground"
-                }`}
+        {/* Right Side */}
+        <Panel defaultSize={55} minSize={30}>
+
+          <div className="flex h-full flex-col">
+
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border bg-card px-4 py-2">
+
+              <select
+                value={selectedLanguage}
+                onChange={(e) => setSelectedLanguage(e.target.value)}
+                className="rounded border border-border bg-secondary px-3 py-1.5 text-sm"
               >
-                Custom Input
-              </button>
-              <button
-                onClick={() => setActivePanel("output")}
-                className={`px-4 py-2 text-sm font-medium ${
-                  activePanel === "output" ? "border-b-2 border-primary text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                Output
-              </button>
+                {languages.map((lang) => (
+                  <option
+                    key={lang.id}
+                    value={lang.id}
+                  >
+                    {lang.name}
+                  </option>
+                ))}
+              </select>
+
+              <div className="flex gap-2">
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopy}
+                >
+                  {copied
+                    ? <CheckCircle2 className="h-4 w-4 text-success" />
+                    : <Copy className="h-4 w-4" />}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCode(defaultCode)}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+
+              </div>
+
             </div>
-            <div className="h-[calc(100%-41px)] overflow-auto p-4">
-              {activePanel === "input" ? (
-                <textarea
-                  value={customInput}
-                  onChange={(e) => setCustomInput(e.target.value)}
-                  placeholder="Enter your custom input here..."
-                  className="h-full w-full resize-none bg-transparent font-mono text-sm focus:outline-none"
+
+            <PanelGroup
+              direction="vertical"
+              className="flex-1"
+            >
+
+              {/* Editor */}
+              <Panel defaultSize={75} minSize={30}>
+
+                <Editor
+                  height="100%"
+                  language={selectedLanguage}
+                  theme="vs-dark"
+                  value={code}
+                  onChange={(value) => setCode(value ?? "")}
+                  options={{
+                    minimap: { enabled: false },
+                    automaticLayout: true,
+                    fontSize: 14,
+                    tabSize: 4,
+                    wordWrap: "on",
+                    scrollBeyondLastLine: false,
+                  }}
                 />
-              ) : (
-                <pre className="font-mono text-sm text-muted-foreground whitespace-pre-wrap">
-                  {output || "Run your code to see output here."}
-                </pre>
-              )}
-            </div>
-          </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-between border-t border-border bg-card px-4 py-3">
-            <div className="text-sm text-muted-foreground">
-              
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleRun}>
+              </Panel>
+
+              <PanelResizeHandle className="h-1 bg-border hover:bg-primary transition-colors" />
+
+              {/* Bottom Panel */}
+              <Panel
+                defaultSize={25}
+                minSize={15}
+              >
+
+                <div className="flex h-full flex-col">
+
+                  <div className="flex border-b border-border">
+
+                    <button
+                      onClick={() => setActivePanel("input")}
+                      className={`px-4 py-2 ${
+                        activePanel === "input"
+                          ? "border-b-2 border-primary"
+                          : ""
+                      }`}
+                    >
+                      Custom Input
+                    </button>
+
+                    <button
+                      onClick={() => setActivePanel("output")}
+                      className={`px-4 py-2 ${
+                        activePanel === "output"
+                          ? "border-b-2 border-primary"
+                          : ""
+                      }`}
+                    >
+                      Output
+                    </button>
+
+                  </div>
+
+                  <div className="flex-1 overflow-auto p-4">
+
+                    {activePanel === "input" ? (
+
+                      <textarea
+                        value={customInput}
+                        onChange={(e) =>
+                          setCustomInput(e.target.value)
+                        }
+                        className="h-full w-full resize-none bg-transparent font-mono outline-none"
+                      />
+
+                    ) : (
+
+                      <pre className="whitespace-pre-wrap font-mono">
+                        {output || "Run your code to see output here."}
+                      </pre>
+
+                    )}
+
+                  </div>
+
+                </div>
+
+              </Panel>
+
+            </PanelGroup>
+
+            <div className="flex items-center justify-end gap-2 border-t border-border bg-card px-4 py-3">
+
+              <Button
+                variant="outline"
+                onClick={handleRun}
+              >
                 <Play className="mr-2 h-4 w-4" />
                 Run
               </Button>
+
               <Button onClick={handleSubmit}>
                 <Send className="mr-2 h-4 w-4" />
                 Submit
               </Button>
+
             </div>
+
           </div>
-        </div>
-      </div>
+
+        </Panel>
+
+      </PanelGroup>
     </div>
   )
 }
