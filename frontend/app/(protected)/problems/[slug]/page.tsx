@@ -119,11 +119,6 @@ export default function ProblemPage() {
     }, 1500);
   };
   const handleSubmit = async () => {
-    if (!contestId) {
-      setActivePanel("output");
-      setOutput("Submissions are only available inside contests.");
-      return;
-    }
 
     const language = languageMap[selectedLanguage];
 
@@ -138,13 +133,14 @@ export default function ProblemPage() {
       setOutput("Submitting solution...");
 
       const submitRes = await apiFetch(
-        `/contests/${contestId}/submit`,
+        `/submissions/submit`,
         {
           method: "POST",
           body: JSON.stringify({
             problemId: problem._id,
             language,
             code,
+            contestId
           }),
         }
       );

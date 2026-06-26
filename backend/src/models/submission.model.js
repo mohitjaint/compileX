@@ -14,7 +14,7 @@ const submissionSchema = new mongoose.Schema({
     contest :{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Contest',
-        required: true
+        default: null
     },
     language : {
         type: String,
