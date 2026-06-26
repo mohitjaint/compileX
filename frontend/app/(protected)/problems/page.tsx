@@ -25,9 +25,15 @@ export default function ProblemsPage() {
 					try {
 							setLoading(true);
 
-							const response = await apiFetch("/problems/all");
+							let response = await apiFetch("/problems/all");
 
-							console.log("Fetched problems:", response.data); // Log the fetched data
+              // assign indexes to problems
+              response.data = response.data.map((problem: any, index: number) => ({
+                ...problem,
+                index: index + 1, // Assign index starting from 1
+              }));
+
+							// console.log("Fetched problems:", response.data); // Log the fetched data
 
 							setProblems(response.data);
 					} catch (err: any) {
@@ -107,19 +113,19 @@ export default function ProblemsPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border text-left text-sm text-muted-foreground">
-              <th className="px-6 py-4 font-medium w-12">Status</th>
+              <th className="px-6 py-4 font-medium w-12">Index</th>
               <th className="px-6 py-4 font-medium">Title</th>
               <th className="px-6 py-4 font-medium">Difficulty</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {problems.map((problem) => (
-              <tr key={problem.id} className="hover:bg-secondary/30">
+              <tr key={problem._id} className="hover:bg-secondary/30">
+                {/* Index */}
                 <td className="px-6 py-4">
-                  {problem.solved && (
-                    <CheckCircle2 className="h-5 w-5 text-success" />
-                  )}
+                  <span className="font-medium">{problem.index}</span>
                 </td>
+
                 <td className="px-6 py-4">
                   <Link 
                     href={`/problems/${problem.slug}`}
@@ -128,15 +134,13 @@ export default function ProblemsPage() {
                     {problem.title}
                   </Link>
                 </td>
+                
                 <td className="px-6 py-4">
                   <span className={`rounded px-2 py-1 text-xs font-medium ${difficultyColors[problem.difficulty as keyof typeof difficultyColors]}`}>
                     {problem.difficulty}
                   </span>
                 </td>
                 
-                <td className="px-6 py-4">
-                  
-                </td>
               </tr>
             ))}
           </tbody>
