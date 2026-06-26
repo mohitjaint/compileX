@@ -7,6 +7,7 @@ import {apiFetch} from "@/lib/api"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, Play, Send, RotateCcw, Settings, Copy, CheckCircle2 } from "lucide-react"
+import Editor from "@monaco-editor/react";
 
 
 const languages = [
@@ -225,11 +226,26 @@ export default function ProblemPage() {
 
           {/* Code Area */}
           <div className="flex-1 overflow-hidden">
-            <textarea
+            <Editor
+              height="100%"
+              language={selectedLanguage === "cpp" ? "cpp" : selectedLanguage}
+              theme="vs-dark"
               value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="h-full w-full resize-none bg-background p-4 font-mono text-sm focus:outline-none"
-              spellCheck={false}
+              onChange={(value) => setCode(value ?? "")}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                tabSize: 4,
+                insertSpaces: true,
+                automaticLayout: true,
+                scrollBeyondLastLine: false,
+                wordWrap: "on",
+                fontFamily: "JetBrains Mono, monospace",
+                autoClosingBrackets: "always",
+                autoClosingQuotes: "always",
+                formatOnPaste: true,
+                formatOnType: true,
+              }}
             />
           </div>
 
