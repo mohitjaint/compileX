@@ -228,7 +228,7 @@ export default function ContestPage({ params }: { params: Promise<{ id: string }
                   </td>
                   <td className="px-6 py-4 text-right">
                     <Button size="sm" asChild>
-                      <Link href={`/problems/${object.problem.slug}`}>
+                      <Link href={`/problems/${object.problem.slug}?contestId=${contest._id}&returnTo=/contests/${contest._id}`}>
                         Solve
                       </Link>
                     </Button>
