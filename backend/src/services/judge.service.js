@@ -1,14 +1,46 @@
 import { ApiError } from "../utils/ApiError.js";
 import Submission from "../models/submission.model.js";
 import Problem from "../models/problem.model.js";
+import ContestParticipant from "../models/contestParticipant.model.js";
+import Contest from "../models/contest.model.js";
 import Docker from "dockerode";
 import fs from "fs";
 import path from "path";
+import { updateContestParticipant } from "./contest.service.js";
 
 const docker = new Docker();
 
-export const judgeSubmission = async (submissionId) => {
+const submissionUpdateHelper = async (
+    {
+        submission,
+        verdict,
+        status,
+        contestId, 
+        contestParticipantId, 
+        executionTime = null
+    }
+) => {
 
+    submission.status = status;
+    submission.verdict = verdict;
+    if(executionTime !== null) {
+        submission.executionTime = executionTime;
+    }
+
+    await submission.save();
+
+    if (contestId && contestParticipantId) {
+        await updateContestParticipant(submission._id, contestId, contestParticipantId);
+    }
+}
+
+export const judgeSubmission = async (
+    {
+        submissionId,
+        contestId, 
+        contestParticipantId
+    }
+) => {
     const submission = await Submission.findById(submissionId);
 
     console.log("Judging submission:", submissionId);
@@ -86,9 +118,15 @@ g++ main.cpp -o main`
         console.log("Compilation result :\n", compileResult);
 
         if (compileResult.ExitCode !== 0) {
-            submission.status = "Completed";
-            submission.verdict = "Compilation Error";
-            await submission.save();
+            await submissionUpdateHelper(
+                {
+                    submission,
+                    verdict : "Compilation Error",
+                    status : "Completed", 
+                    contestId, 
+                    contestParticipantId
+                }
+            );
             return;
         }
 
@@ -114,9 +152,15 @@ g++ main.cpp -o main`
             }
             catch (err) {
                 console.error("Error reading test case files:", err);
-                submission.status = "Failed";
-                submission.verdict = "Runtime Error";
-                await submission.save();
+                await submissionUpdateHelper(
+                    {
+                        submission,
+                        verdict: "Runtime Error", 
+                        status: "Failed",
+                        contestId, 
+                        contestParticipantId
+                    }
+                );
                 return;
             }
 
@@ -167,28 +211,43 @@ g++ main.cpp -o main`
             console.log("Run result :\n", runResult);
 
             if (runResult.ExitCode === 137) {
-                submission.status = "Completed";
-                submission.verdict = "Memory Limit Exceeded";
-
-                await submission.save();
+                await submissionUpdateHelper(
+                    {
+                        submission,
+                        verdict: "Memory Limit Exceeded",
+                        status: "Completed",
+                        contestId, 
+                        contestParticipantId
+                    }
+                );
                 return;
             }
 
             if (runResult.ExitCode === 124) {
 
-                submission.status = "Completed";
-                submission.verdict = "Time Limit Exceeded";
-
-                await submission.save();
+                await submissionUpdateHelper(
+                    {
+                        submission,
+                        verdict: "Time Limit Exceeded",
+                        status: "Completed", 
+                        contestId, 
+                        contestParticipantId
+                    }
+                );
                 return;
             }
 
             if (runResult.ExitCode !== 0) {
 
-                submission.status = "Completed";
-                submission.verdict = "Runtime Error";
-
-                await submission.save();
+                await submissionUpdateHelper(
+                    {
+                        submission,
+                        verdict: "Runtime Error",
+                        status: "Completed",
+                        contestId, 
+                        contestParticipantId
+                    }
+                );
                 return;
             }
 
@@ -210,12 +269,17 @@ g++ main.cpp -o main`
             console.log("Finished testcase:", testcase);
         }
         console.log("Loop completed");
+        
 
-        submission.status = "Completed";
-        submission.verdict = allPassed ? "Accepted" : "Wrong Answer";
-        submission.executionTime = maxTime;
-
-        await submission.save();
+        await submissionUpdateHelper(
+            {
+                submission, 
+                verdict: allPassed ? "Accepted" : "Wrong Answer",
+                status: "Completed",
+                contestId, contestParticipantId, 
+                executionTime: maxTime
+            }
+        );
         
     }
     catch (error) {
@@ -225,13 +289,16 @@ g++ main.cpp -o main`
             error
         );
 
-        submission.status =
-            "Failed";
+        await submissionUpdateHelper(
+            {
+                submission,
+                verdict: "Runtime Error",
+                status: "Failed",
+                contestId, 
+                contestParticipantId
+            }
+        );
 
-        submission.verdict =
-            "Runtime Error";
-
-        await submission.save();
 
     }
     finally {

@@ -39,6 +39,11 @@ const contestSchema = new mongoose.Schema({
         ]
     }
     ,
+    penaltyPerWrongSubmission : {
+        type: Number, //minutes
+        required: true,
+        min: 0
+    },
     startTime : {
         type: Date,
         required: true

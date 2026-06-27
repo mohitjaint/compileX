@@ -27,7 +27,7 @@ const submitSolution = asyncHandler(async (req, res) => {
     if (!problem) {
         throw new ApiError(404, 'Problem not found.');
     }
-
+    let participant = null;
     if(contestId) {
         // Validate the contest
         const contest = await Contest.findById(contestId);
@@ -36,7 +36,7 @@ const submitSolution = asyncHandler(async (req, res) => {
         }
 
         // Check if the user is a participant of the contest
-        const participant = await ContestParticipant.findOne({ 
+        participant = await ContestParticipant.findOne({ 
             user: req.user._id, 
             contest: contestId 
         });
@@ -58,7 +58,13 @@ const submitSolution = asyncHandler(async (req, res) => {
     await submission.save();
 
     // Call the judge service to evaluate the submission
-    judgeSubmission(submission._id);
+    judgeSubmission(
+        {
+            submissionId : submission._id,
+            contestId : contestId || null,
+            contestParticipantId : participant ? participant._id : null
+        }
+    );
     
     res.status(201).json(new ApiResponse(201, 'Submission created successfully.', { submissionId: submission._id }));
     

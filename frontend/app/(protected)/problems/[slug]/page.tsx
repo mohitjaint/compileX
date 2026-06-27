@@ -144,7 +144,7 @@ export default function ProblemPage() {
           }),
         }
       );
-
+      console.log("Submission response:", submitRes);
       const submissionId = submitRes.data.submissionId;
 
       setOutput(`Submission queued...\nSubmission ID: ${submissionId}`);
