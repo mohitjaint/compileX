@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import AdmZip from 'adm-zip';
 import {ApiError} from './ApiError.js';
 
@@ -33,6 +34,7 @@ export const extractZip = (
     try {
 
         const zip = new AdmZip(zipFilePath);
+        const entries = zip.getEntries();
 
         if (!fs.existsSync(destinationPath)) {
             fs.mkdirSync(destinationPath, {
@@ -40,7 +42,35 @@ export const extractZip = (
             });
         }
 
-        zip.extractAllTo(destinationPath, true);
+        // Detect a common top-level directory prefix to strip it.
+        // e.g. if all entries start with "testcases/" we strip that prefix
+        // so files land directly in destinationPath/.
+        const firstEntry = entries[0];
+        const topLevelPrefix = firstEntry
+            ? firstEntry.entryName.split('/')[0] + '/'
+            : null;
+        const hasCommonPrefix =
+            topLevelPrefix &&
+            entries.every(e => e.entryName.startsWith(topLevelPrefix));
+
+        for (const entry of entries) {
+            // Strip the common top-level prefix if present
+            const relativePath = hasCommonPrefix
+                ? entry.entryName.slice(topLevelPrefix.length)
+                : entry.entryName;
+
+            if (!relativePath) continue; // skip the root folder entry itself
+
+            const targetPath = path.join(destinationPath, relativePath);
+
+            if (entry.isDirectory) {
+                fs.mkdirSync(targetPath, { recursive: true });
+            } else {
+                // Ensure parent directories exist
+                fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+                fs.writeFileSync(targetPath, entry.getData());
+            }
+        }
 
     }
     catch (error) {
