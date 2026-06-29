@@ -1,26 +1,82 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Search, Filter, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import apiFetch from "@/lib/api"
+import { useAuth } from "@/context/AuthContext"
 
 type Verdict = "Accepted" | "Wrong Answer" | "Time Limit Exceeded" | "Runtime Error" | "Compilation Error" | "Memory Limit Exceeded" | "Pending"
 
-const submissions = [
-  { id: "12847", problem: "Two Sum", problemId: "two-sum", verdict: "Accepted" as Verdict, language: "C++17", time: "12ms", memory: "8.2 MB", submittedAt: "2 minutes ago" },
-  { id: "12846", problem: "Binary Search Tree Validation", problemId: "bst", verdict: "Wrong Answer" as Verdict, language: "Python 3", time: "-", memory: "-", submittedAt: "15 minutes ago" },
-  { id: "12845", problem: "Binary Search Tree Validation", problemId: "bst", verdict: "Wrong Answer" as Verdict, language: "Python 3", time: "-", memory: "-", submittedAt: "18 minutes ago" },
-  { id: "12844", problem: "Graph Shortest Path", problemId: "graph-dijkstra", verdict: "Time Limit Exceeded" as Verdict, language: "Java 17", time: "2000ms", memory: "64 MB", submittedAt: "1 hour ago" },
-  { id: "12843", problem: "Graph Shortest Path", problemId: "graph-dijkstra", verdict: "Time Limit Exceeded" as Verdict, language: "Java 17", time: "2000ms", memory: "58 MB", submittedAt: "1 hour ago" },
-  { id: "12842", problem: "Dynamic Programming Challenge", problemId: "dp-knapsack", verdict: "Accepted" as Verdict, language: "C++17", time: "45ms", memory: "12 MB", submittedAt: "2 hours ago" },
-  { id: "12841", problem: "Dynamic Programming Challenge", problemId: "dp-knapsack", verdict: "Runtime Error" as Verdict, language: "C++17", time: "-", memory: "-", submittedAt: "2 hours ago" },
-  { id: "12840", problem: "String Matching", problemId: "kmp", verdict: "Accepted" as Verdict, language: "C++17", time: "8ms", memory: "4.5 MB", submittedAt: "3 hours ago" },
-  { id: "12839", problem: "Array Manipulation", problemId: "array-ops", verdict: "Memory Limit Exceeded" as Verdict, language: "Java 17", time: "156ms", memory: "512 MB", submittedAt: "5 hours ago" },
-  { id: "12838", problem: "Sorting Algorithm", problemId: "merge-sort", verdict: "Accepted" as Verdict, language: "Python 3", time: "234ms", memory: "32 MB", submittedAt: "1 day ago" },
-  { id: "12837", problem: "Tree Traversal", problemId: "tree-dfs", verdict: "Compilation Error" as Verdict, language: "Rust", time: "-", memory: "-", submittedAt: "1 day ago" },
-  { id: "12836", problem: "Linked List Operations", problemId: "linked-list", verdict: "Accepted" as Verdict, language: "Go", time: "4ms", memory: "2.1 MB", submittedAt: "2 days ago" },
-]
+// 0
+// : 
+// code
+// : 
+// "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // Your code here\n\n    int a, b;\n    cin>>a>>b;\n    cout<<a+b<<endl;\n    \n    return 0;\n}"
+// contest
+// : 
+// _id
+// : 
+// "6a0c1fed021305bae3620469"
+// [[Prototype]]
+// : 
+// Object
+// createdAt
+// : 
+// "2026-06-27T08:55:24.787Z"
+// executionTime
+// : 
+// 37
+// language
+// : 
+// "C++"
+// memoryUsed
+// : 
+// null
+// problem
+// : 
+// {_id: '6a071008cafe2b03a35aed20', title: 'Sum Array'}
+// status
+// : 
+// "Completed"
+// updatedAt
+// : 
+// "2026-06-27T08:55:26.801Z"
+// user
+// : 
+// "6a01c002a72d6dccdb45092d"
+// verdict
+// : 
+// "Accepted"
+// _id
+// : 
+// "6a3f8ffca4780c9d2d4da15b"
+
+interface Submission {
+  _id: string;
+  code: string;
+  contest: string;
+  createdAt: string;
+  executionTime: number;
+  language: string;
+  memoryUsed: number;
+  problem: {
+    _id: string;
+    title: string;
+  };
+  status: string;
+  updatedAt: string;
+  user: string;
+  verdict: Verdict;
+}
+
+interface SubmissionResponse {
+  submissions: Submission[];
+  totalSubmissions: number;
+  totalPages: number;
+  currentPage: number;
+}
 
 const verdictStyles: Record<Verdict, string> = {
   "Accepted": "bg-success/10 text-success border-success/30",
@@ -43,21 +99,49 @@ const verdictLabels: Record<Verdict, string> = {
 }
 
 export default function SubmissionsPage() {
+
+  const [submissions, setSubmissions] = useState<SubmissionResponse | null>(null);
+
+  useEffect(() => {
+    const getSubmissions = async () => {
+      const response = await apiFetch('/submissions/my-submissions')
+      if (response.success && response.data) {
+        setSubmissions(response.data)
+        console.log("My submissions : ", response.data);
+      }
+    }
+    getSubmissions()
+  }, [])
+
   const [filter, setFilter] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState("")
 
-  const filteredSubmissions = submissions.filter(sub => {
-    const matchesFilter = filter === "all" || sub.verdict === filter
-    const matchesSearch = sub.problem.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesFilter && matchesSearch
-  })
+  const filteredSubmissions =
+    submissions?.submissions.filter(sub => {
+      const matchesFilter =
+        filter === "all" || sub.verdict === filter;
 
+      const matchesSearch =
+        sub.problem.title
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
+
+      return matchesFilter && matchesSearch;
+    }) ?? [];
+
+  const allSubmissions = submissions?.submissions ?? [];
   const stats = {
-    total: submissions.length,
-    accepted: submissions.filter(s => s.verdict === "Accepted").length,
-    wa: submissions.filter(s => s.verdict === "Wrong Answer").length,
-    tle: submissions.filter(s => s.verdict === "Time Limit Exceeded").length,
-  }
+    total: allSubmissions.length,
+    accepted: allSubmissions.filter(
+      s => s.verdict === "Accepted"
+    ).length,
+    wa: allSubmissions.filter(
+      s => s.verdict === "Wrong Answer"
+    ).length,
+    tle: allSubmissions.filter(
+      s => s.verdict === "Time Limit Exceeded"
+    ).length,
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
@@ -103,11 +187,10 @@ export default function SubmissionsPage() {
             <button
               key={verdict}
               onClick={() => setFilter(verdict)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                filter === verdict
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-muted-foreground hover:text-foreground"
-              }`}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${filter === verdict
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-muted-foreground hover:text-foreground"
+                }`}
             >
               {verdict === "all" ? "All" : verdictLabels[verdict as Verdict]}
             </button>
@@ -132,16 +215,16 @@ export default function SubmissionsPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {filteredSubmissions.map((submission) => (
-                <tr key={submission.id} className="hover:bg-secondary/30">
+                <tr key={submission._id} className="hover:bg-secondary/30">
                   <td className="px-6 py-4 font-mono text-sm text-muted-foreground">
-                    #{submission.id}
+                    #{submission._id}
                   </td>
                   <td className="px-6 py-4">
-                    <Link 
-                      href={`/problems/${submission.problemId}`}
+                    <Link
+                      href={`/problems/${submission.problem._id}`}
                       className="flex items-center gap-2 font-medium hover:text-primary"
                     >
-                      {submission.problem}
+                      {submission.problem.title}
                       <ExternalLink className="h-3 w-3" />
                     </Link>
                   </td>
@@ -151,9 +234,9 @@ export default function SubmissionsPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 font-mono text-sm">{submission.language}</td>
-                  <td className="px-6 py-4 font-mono text-sm text-muted-foreground">{submission.time}</td>
-                  <td className="px-6 py-4 font-mono text-sm text-muted-foreground">{submission.memory}</td>
-                  <td className="px-6 py-4 text-right text-sm text-muted-foreground">{submission.submittedAt}</td>
+                  <td className="px-6 py-4 font-mono text-sm text-muted-foreground">{submission.executionTime ? `${submission.executionTime}ms` : "-"}</td>
+                  <td className="px-6 py-4 font-mono text-sm text-muted-foreground">{submission.memoryUsed ? `${submission.memoryUsed}KB` : "-"}</td>
+                  <td className="px-6 py-4 text-right text-sm text-muted-foreground">{submission.updatedAt ? `${new Date(submission.updatedAt).toLocaleString()}` : "-"}</td>
                 </tr>
               ))}
             </tbody>
@@ -164,7 +247,7 @@ export default function SubmissionsPage() {
       {/* Pagination */}
       <div className="mt-6 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing {filteredSubmissions.length} of {submissions.length} submissions
+          Showing {filteredSubmissions.length} of {submissions?.totalSubmissions} submissions
         </p>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" disabled>
