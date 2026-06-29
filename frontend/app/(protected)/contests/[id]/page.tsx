@@ -6,10 +6,11 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Calendar, Clock, Lock, Unlock, Timer, Loader2, AlertTriangle } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
+import { Trophy } from "lucide-react";
 
 interface Problem {
-  problem : {
-     _id: string
+  problem: {
+    _id: string
     title: string
     difficulty: 'Easy' | 'Medium' | 'Hard'
     slug: string
@@ -171,7 +172,7 @@ export default function ContestPage({ params }: { params: Promise<{ id: string }
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
+          {/* <div className="flex items-center gap-6">
             <div className="text-center">
               <div className="flex items-center gap-2 text-3xl font-mono font-bold text-primary">
                 <Timer className="h-6 w-6" />
@@ -181,6 +182,25 @@ export default function ContestPage({ params }: { params: Promise<{ id: string }
                 {isLive ? 'Time Remaining' : now < start ? 'Contest Schedule' : 'Status'}
               </div>
             </div>
+          </div> */}
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <div className="flex items-center gap-2 text-3xl font-mono font-bold text-primary">
+                <Timer className="h-6 w-6" />
+                {countdown}
+              </div>
+
+              <div className="text-sm text-muted-foreground">
+                {isLive ? "Time Remaining" : now < start ? "Contest Schedule" : "Status"}
+              </div>
+            </div>
+
+            <Button asChild>
+              <Link href={`/contests/${contest._id}/leaderboard`}>
+                <Trophy className="mr-2 h-4 w-4" />
+                Leaderboard
+              </Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -215,7 +235,7 @@ export default function ContestPage({ params }: { params: Promise<{ id: string }
                   </td>
                   <td className="px-6 py-4">
                     <Link
-                       href={`/problems/${object.problem.slug}?contestId=${contest._id}&returnTo=/contests/${contest._id}`}
+                      href={`/problems/${object.problem.slug}?contestId=${contest._id}&returnTo=/contests/${contest._id}`}
                       className="font-medium hover:text-primary transition-colors"
                     >
                       {object.problem.title}

@@ -20,10 +20,11 @@ router.delete('/:id', verifyJWT, adminCheck, deleteContest);
 
 
 // contest participant routes
-import { registerForContest, deleteContestParticipant } from "../controllers/contestParticipant.controller.js";
+import { registerForContest, deleteContestParticipant, getLeaderboard } from "../controllers/contestParticipant.controller.js";
 
-router.post('/:contestId/register',verifyJWT, registerForContest);
+router.post('/:contestId/register', verifyJWT, registerForContest);
 router.delete('/:contestId/unregister', verifyJWT, deleteContestParticipant);
+router.get('/:contestId/leaderboard', verifyJWT, getLeaderboard);
 
 
 // submission routes
