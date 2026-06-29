@@ -10,9 +10,7 @@ import { useAuth } from "@/context/AuthContext"
 const navigation = [
   { name: "Contests", href: "/contests" },
   { name: "Problems", href: "/problems" },
-  { name: "Leaderboard", href: "/leaderboard" },
-  { name: "Submissions", href: "/submissions" },
-  { name: "Admin", href: "/admin" },
+  { name: "Submissions", href: "/submissions" }
 ]
 
 export function Header() {
@@ -31,13 +29,17 @@ export function Header() {
     return `${BACKEND_BASE_URL}/${avatarUrl}`.replace(/([^:]\/)\/+/g, '$1');
   }
   const { user } = useAuth()
+
+  if (user?.role === "admin") {
+    navigation.push({ name: "Admin", href: "/admin" })
+  }
   const initials = user?.fullName
     ? user.fullName
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase())
-        .join("")
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("")
     : user?.username?.slice(0, 2).toUpperCase()
 
   return (
@@ -50,7 +52,7 @@ export function Header() {
             </div>
             <span className="text-xl font-semibold tracking-tight">CompileX</span>
           </Link>
-          
+
           <div className="hidden md:flex md:gap-6">
             {navigation.map((item) => (
               <Link
