@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Terminal, Menu, X } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 
-const navigation = [
+let navigation = [
   { name: "Contests", href: "/contests" },
   { name: "Problems", href: "/problems" },
   { name: "Submissions", href: "/submissions" }
@@ -31,7 +31,12 @@ export function Header() {
   const { user } = useAuth()
 
   if (user?.role === "admin") {
-    navigation.push({ name: "Admin", href: "/admin" })
+    navigation = [
+      { name: "Contests", href: "/contests" },
+      { name: "Problems", href: "/problems" },
+      { name: "Submissions", href: "/submissions" },
+      { name: "Admin", href: "/admin" }
+    ]
   }
   const initials = user?.fullName
     ? user.fullName

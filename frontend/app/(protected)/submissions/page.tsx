@@ -64,6 +64,7 @@ interface Submission {
   problem: {
     _id: string;
     title: string;
+    slug: string;
   };
   status: string;
   updatedAt: string;
@@ -221,7 +222,7 @@ export default function SubmissionsPage() {
                   </td>
                   <td className="px-6 py-4">
                     <Link
-                      href={`/problems/${submission.problem._id}`}
+                      href={`/problems/${submission.problem.slug}?returnTo=/submissions`}
                       className="flex items-center gap-2 font-medium hover:text-primary"
                     >
                       {submission.problem.title}

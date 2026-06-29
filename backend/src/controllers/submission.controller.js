@@ -2,33 +2,33 @@ import Submission from "../models/submission.model.js";
 import Contest from "../models/contest.model.js";
 import ContestParticipant from "../models/contestParticipant.model.js";
 import Problem from "../models/problem.model.js";
-import {ApiError} from '../utils/ApiError.js';
-import {ApiResponse} from '../utils/ApiResponse.js';
-import {asyncHandler} from '../utils/asyncHandler.js';
+import { ApiError } from '../utils/ApiError.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 import { judgeSubmission } from "../services/judge.service.js";
 
 const submitSolution = asyncHandler(async (req, res) => {
     const { problemId, language, code, contestId } = req.body;
 
     // Validate all required fields
-    if (problemId === undefined || 
-        language === undefined || 
-        code === undefined ) {
+    if (problemId === undefined ||
+        language === undefined ||
+        code === undefined) {
         throw new ApiError(400, 'Missing required fields: problemId, language, and code are required.');
     }
 
-    if(!code.trim()) {
+    if (!code.trim()) {
         throw new ApiError(400, 'Code cannot be empty.');
     }
 
-    
+
     // Validate the problem
     const problem = await Problem.findById(problemId);
     if (!problem) {
         throw new ApiError(404, 'Problem not found.');
     }
     let participant = null;
-    if(contestId) {
+    if (contestId) {
         // Validate the contest
         const contest = await Contest.findById(contestId);
         if (!contest) {
@@ -36,9 +36,9 @@ const submitSolution = asyncHandler(async (req, res) => {
         }
 
         // Check if the user is a participant of the contest
-        participant = await ContestParticipant.findOne({ 
-            user: req.user._id, 
-            contest: contestId 
+        participant = await ContestParticipant.findOne({
+            user: req.user._id,
+            contest: contestId
         });
 
         if (!participant) {
@@ -60,20 +60,20 @@ const submitSolution = asyncHandler(async (req, res) => {
     // Call the judge service to evaluate the submission
     judgeSubmission(
         {
-            submissionId : submission._id,
-            contestId : contestId || null,
-            contestParticipantId : participant ? participant._id : null
+            submissionId: submission._id,
+            contestId: contestId || null,
+            contestParticipantId: participant ? participant._id : null
         }
     );
-    
+
     res.status(201).json(new ApiResponse(201, 'Submission created successfully.', { submissionId: submission._id }));
-    
+
 });
 
 const getSubmission = asyncHandler(async (req, res) => {
     const submissionId = req.params.submissionId;
 
-    const submission = await Submission.findById(submissionId)  
+    const submission = await Submission.findById(submissionId)
 
     if (!submission) {
         throw new ApiError(404, 'Submission not found.');
@@ -92,8 +92,8 @@ const getMySubmissions = asyncHandler(async (req, res) => {
         user: req.user._id
     })
         .sort({ createdAt: -1 })
-        .populate('problem', 'title')
-        .populate('contest', 'name');
+        .populate('problem', 'title slug')
+        .populate('contest', "title");
 
     return res.status(200).json(
         new ApiResponse(
@@ -108,4 +108,4 @@ export {
     submitSolution,
     getSubmission,
     getMySubmissions
- };
+};
