@@ -1,26 +1,26 @@
 import User from '../models/user.model.js';
-import {asyncHandler} from '../utils/asyncHandler.js';
-import {ApiResponse} from '../utils/ApiResponse.js';
-import {ApiError} from '../utils/ApiError.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import { ApiError } from '../utils/ApiError.js';
 import jwt from 'jsonwebtoken';
 import { options } from '../constants/cookieOptions.js';
 import path from 'path';
 import fs from 'fs';
 
-const registerUser  = asyncHandler(async (req, res) => {
-    const {username, fullName, email, password} = req.body;
+const registerUser = asyncHandler(async (req, res) => {
+    const { username, fullName, email, password } = req.body;
     // Check if user already exists
     const existingUser = await User.findOne({
         $or: [
-            {email},
-            {username}
+            { email },
+            { username }
         ]
-    }) 
+    })
     if (existingUser) {
         throw new ApiError(400, 'User already exists with this email or username');
     }
     // Check if all fields are provided
-    if ( [username, fullName, email, password].some(field=> !field?.trim())){
+    if ([username, fullName, email, password].some(field => !field?.trim())) {
         throw new ApiError(400, 'All fields are required');
     }
     // Create new user
@@ -28,7 +28,7 @@ const registerUser  = asyncHandler(async (req, res) => {
         username,
         fullName,
         email,
-        passwordHash : password
+        passwordHash: password
     });
     //Save user to database
     await newUser.save();
@@ -38,20 +38,20 @@ const registerUser  = asyncHandler(async (req, res) => {
     const refreshToken = newUser.generateRefreshToken();
     // Save refresh token to database
     newUser.refreshToken = refreshToken;
-    await newUser.save({validateBeforeSave: false});
+    await newUser.save({ validateBeforeSave: false });
 
     // Send response with tokens and user data
     const userData = await User.findById(newUser._id);
     res.status(201)
-    .cookie('refreshToken', refreshToken, options)
-    .json(new ApiResponse(201, 'User registered successfully', {
-        accessToken,
-        user: userData
-    }));
+        .cookie('refreshToken', refreshToken, options)
+        .json(new ApiResponse(201, 'User registered successfully', {
+            accessToken,
+            user: userData
+        }));
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-    const {username, email, password} = req.body;
+    const { username, email, password } = req.body;
     // Validate input
     if (email == undefined && username == undefined) {
         throw new ApiError(400, 'Email or username is required');
@@ -62,8 +62,8 @@ const loginUser = asyncHandler(async (req, res) => {
     // Check if user exists
     const user = await User.findOne({
         $or: [
-            {email},
-            {username}
+            { email },
+            { username }
         ]
     }).select('+passwordHash +refreshToken');
     if (!user) {
@@ -81,16 +81,16 @@ const loginUser = asyncHandler(async (req, res) => {
     // Save refresh token to database
     user.refreshToken = refreshToken;
     //Save user with refresh token
-    await user.save({validateBeforeSave: false});
+    await user.save({ validateBeforeSave: false });
 
     // Send response with tokens and user data
     const userData = await User.findById(user._id).select('-passwordHash -refreshToken');
     res.status(200)
-    .cookie('refreshToken', refreshToken, options)
-    .json(new ApiResponse(200, 'Login successful', {
-        accessToken,
-        user: userData
-    }));
+        .cookie('refreshToken', refreshToken, options)
+        .json(new ApiResponse(200, 'Login successful', {
+            accessToken,
+            user: userData
+        }));
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
@@ -99,7 +99,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 const rotateTokens = asyncHandler(async (req, res) => {
-    const {refreshToken} = req.cookies;
+    const { refreshToken } = req.cookies;
     if (!refreshToken) {
         throw new ApiError(401, 'Unauthorized');
     }
@@ -124,21 +124,21 @@ const rotateTokens = asyncHandler(async (req, res) => {
     const newRefreshToken = user.generateRefreshToken();
     // Update refresh token in database
     user.refreshToken = newRefreshToken;
-    await user.save({validateBeforeSave: false});
+    await user.save({ validateBeforeSave: false });
     // Send response with new tokens
     res.status(200)
-    .cookie('refreshToken', newRefreshToken, options)
-    .json(new ApiResponse(200, 'Tokens rotated successfully', {
-        user,
-        accessToken
-    }));
+        .cookie('refreshToken', newRefreshToken, options)
+        .json(new ApiResponse(200, 'Tokens rotated successfully', {
+            user,
+            accessToken
+        }));
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
     const user = req.user;
     // Clear refresh token from database
     user.refreshToken = "";
-    await user.save({validateBeforeSave: false});
+    await user.save({ validateBeforeSave: false });
     // Clear refresh token cookie
     res.clearCookie('refreshToken', options);
     res.status(200).json(new ApiResponse(200, 'Logout successful'));
@@ -146,12 +146,12 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 const updateUserProfile = asyncHandler(async (req, res) => {
     const user = req.user;
-    const {fullName, email, username} = req.body;
+    const { fullName, email, username } = req.body;
     // Update user fields if provided
     if (fullName?.trim()) user.fullName = fullName.trim();
     if (email?.trim()) {
         // Check if email is already taken by another user
-        const existingUser = await User.findOne({email, _id: {$ne: user._id}});
+        const existingUser = await User.findOne({ email, _id: { $ne: user._id } });
         if (existingUser) {
             throw new ApiError(400, 'Email is already taken');
         }
@@ -159,7 +159,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     }
     if (username?.trim()) {
         // Check if username is already taken by another user
-        const existingUser = await User.findOne({username, _id: {$ne: user._id}});
+        const existingUser = await User.findOne({ username, _id: { $ne: user._id } });
         if (existingUser) {
             throw new ApiError(400, 'Username is already taken');
         }
@@ -174,7 +174,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
 const updateUserPassword = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id).select('+passwordHash +refreshToken');
-    const {currentPassword, newPassword} = req.body;
+    const { currentPassword, newPassword } = req.body;
 
     // Validate input
     if (!currentPassword?.trim() || !newPassword?.trim()) {
@@ -203,10 +203,10 @@ const updateUserPassword = asyncHandler(async (req, res) => {
 
     // Clear old refresh token cookie and set new one
     res.status(200)
-    .cookie('refreshToken', newRefreshToken, options)
-    .json(new ApiResponse(200, 'Password updated successfully', {
-        accessToken: newAccessToken
-    }));
+        .cookie('refreshToken', newRefreshToken, options)
+        .json(new ApiResponse(200, 'Password updated successfully', {
+            accessToken: newAccessToken
+        }));
 });
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
@@ -233,6 +233,12 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         avatarUrl: user.avatarUrl
     }));
 });
+
+const getUsers = asyncHandler(async (req, res) => {
+    const users = await User.find().select('-passwordHash -refreshToken');
+    res.status(200).json(new ApiResponse(200, 'Users retrieved successfully', users));
+});
+
 export {
     registerUser,
     loginUser,
@@ -241,5 +247,6 @@ export {
     logoutUser,
     updateUserProfile,
     updateUserPassword,
-    updateUserAvatar
+    updateUserAvatar,
+    getUsers
 };

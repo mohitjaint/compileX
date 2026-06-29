@@ -5,13 +5,13 @@ import { usePathname } from "next/navigation"
 import { Terminal, LayoutDashboard, Trophy, FileCode, Users, Server, Activity, Settings, ArrowLeft } from "lucide-react"
 
 const navigation = [
-  { name: "Overview", href: "/admin", icon: LayoutDashboard },
+  //{ name: "Overview", href: "/admin", icon: LayoutDashboard },
   { name: "Contests", href: "/admin/contests", icon: Trophy },
   { name: "Problems", href: "/admin/problems", icon: FileCode },
   { name: "Users", href: "/admin/users", icon: Users },
-  { name: "Workers", href: "/admin/workers", icon: Server },
-  { name: "Queue", href: "/admin/queue", icon: Activity },
-  { name: "Settings", href: "/admin/settings", icon: Settings },
+  //{ name: "Workers", href: "/admin/workers", icon: Server },
+  //{ name: "Queue", href: "/admin/queue", icon: Activity },
+  // { name: "Settings", href: "/admin/settings", icon: Settings },
 ]
 
 export default function AdminLayout({
@@ -30,11 +30,13 @@ export default function AdminLayout({
             <Terminal className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <span className="font-semibold">CompileX</span>
-            <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground">Admin</span>
+            <Link href="/">
+              <span className="font-semibold" >CompileX</span>
+              <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground">Admin</span>
+            </Link>
           </div>
         </div>
-        
+
         <nav className="space-y-1 p-4">
           {navigation.map((item) => {
             const isActive = pathname === item.href
@@ -42,11 +44,10 @@ export default function AdminLayout({
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                }`}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${isActive
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  }`}
               >
                 <item.icon className="h-5 w-5" />
                 {item.name}
@@ -54,7 +55,7 @@ export default function AdminLayout({
             )
           })}
         </nav>
-        
+
         <div className="absolute bottom-0 left-0 right-0 border-t border-border p-4">
           <Link
             href="/dashboard"
