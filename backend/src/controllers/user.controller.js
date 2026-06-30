@@ -6,6 +6,8 @@ import jwt from 'jsonwebtoken';
 import { options } from '../constants/cookieOptions.js';
 import path from 'path';
 import fs from 'fs';
+import ContestParticipant from '../models/contestParticipant.model.js';
+import Submission from '../models/submission.model.js';
 
 const registerUser = asyncHandler(async (req, res) => {
     const { username, fullName, email, password } = req.body;
@@ -239,6 +241,35 @@ const getUsers = asyncHandler(async (req, res) => {
     res.status(200).json(new ApiResponse(200, 'Users retrieved successfully', users));
 });
 
+const deleteUser = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id).select('+passwordHash +refreshToken');
+    const { password } = req.body;
+    if (!user) {
+        throw new ApiError(404, 'User not found');
+    }
+
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+        throw new ApiError(401, 'Invalid password');
+    }
+
+    // remove contest Participation and submissions 
+    await ContestParticipant.deleteMany({ user: user._id });
+    await Submission.deleteMany({ user: user._id });
+    // remove user's avatar
+    if (user.avatarUrl) {
+        const avatarPath = path.join('public', user.avatarUrl);
+        if (fs.existsSync(avatarPath) && !avatarPath.includes('default-avatar.png')) {
+            fs.unlinkSync(avatarPath);
+        }
+    }
+    await user.deleteOne();
+    res
+        .clearCookie('refreshToken', options)
+        .status(200)
+        .json(new ApiResponse(200, 'User deleted successfully'));
+});
+
 export {
     registerUser,
     loginUser,
@@ -248,5 +279,6 @@ export {
     updateUserProfile,
     updateUserPassword,
     updateUserAvatar,
-    getUsers
+    getUsers,
+    deleteUser
 };

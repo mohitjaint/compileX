@@ -9,10 +9,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { apiFetch } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
-import { Loader2, Upload, UserCircle2 } from 'lucide-react'
+import { Loader2, Upload, UserCircle2, Trash2 } from 'lucide-react'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
-
 const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || ''
 
 function resolveAvatarUrl(avatarUrl?: string) {
@@ -34,8 +33,14 @@ export default function ProfilePage() {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
+
+  // State variables for form statuses
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [confirmPassword, setConfirmPassword] = useState('')
+
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -53,18 +58,12 @@ export default function ProfilePage() {
 
   const initials = user?.fullName
     ? user.fullName
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase())
-        .join('')
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join('')
     : user?.username?.slice(0, 2).toUpperCase()
-
-  const authHeaders = accessToken
-    ? {
-        Authorization: `Bearer ${accessToken}`,
-      }
-    : {}
 
   const handleProfileSave = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -124,7 +123,6 @@ export default function ProfilePage() {
       const uploadHeaders: Record<string, string> = {}
       if (token) uploadHeaders.Authorization = `Bearer ${token}`
 
-
       const data = await apiFetch('/users/update-avatar', {
         method: 'PATCH',
         body: formData,
@@ -133,9 +131,9 @@ export default function ProfilePage() {
       setUser((currentUser) =>
         currentUser
           ? {
-              ...currentUser,
-              avatarUrl: data.data.avatarUrl,
-            }
+            ...currentUser,
+            avatarUrl: data.data.avatarUrl,
+          }
           : currentUser,
       )
       setAvatarFile(null)
@@ -144,6 +142,45 @@ export default function ProfilePage() {
       setError(err instanceof Error ? err.message : 'Failed to update avatar')
     } finally {
       setIsUploading(false)
+    }
+  }
+
+  const handleDeleteAccount = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setError('')
+    setMessage('')
+
+    if (!confirmPassword) {
+      setError('Please enter your password to confirm account deletion')
+      return
+    }
+
+    setIsDeleting(true)
+
+    try {
+      let token = accessToken
+      if (!token) {
+        token = await rotateToken()
+      }
+
+      const headers: Record<string, string> = {}
+      if (token) headers.Authorization = `Bearer ${token}`
+
+      await apiFetch('/users/delete-user', {
+        method: 'DELETE',
+        headers,
+        body: JSON.stringify({
+          password: confirmPassword,
+        }),
+      })
+
+      // Wipe out the local client-side user context state and kick back to home
+      setUser(null)
+      router.push('/')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete account')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -160,42 +197,105 @@ export default function ProfilePage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
-        <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle>Avatar</CardTitle>
-            <CardDescription>Upload a new profile image.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center gap-4">
-              <Avatar className="size-20 border border-border">
-                <AvatarImage src={avatarSrc} alt={user.fullName} />
-                <AvatarFallback className="text-lg">{initials}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">{user.fullName}</p>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
+        <div className="space-y-6">
+          {/* Avatar Card */}
+          <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle>Avatar</CardTitle>
+              <CardDescription>Upload a new profile image.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center gap-4">
+                <Avatar className="size-20 border border-border">
+                  <AvatarImage src={avatarSrc} alt={user.fullName} />
+                  <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">{user.fullName}</p>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                </div>
               </div>
-            </div>
 
-            <form className="space-y-4" onSubmit={handleAvatarUpload}>
-              <div className="space-y-2">
-                <Label htmlFor="avatar">Choose image</Label>
-                <Input
-                  id="avatar"
-                  type="file"
-                  accept="image/png,image/jpg,image/jpeg,image/webp"
-                  onChange={(event) => setAvatarFile(event.target.files?.[0] ?? null)}
-                />
-              </div>
-              <Button type="submit" disabled={isUploading} className="w-full gap-2">
-                {isUploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-                Upload avatar
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+              <form className="space-y-4" onSubmit={handleAvatarUpload}>
+                <div className="space-y-2">
+                  <Label htmlFor="avatar">Choose image</Label>
+                  <Input
+                    id="avatar"
+                    type="file"
+                    accept="image/png,image/jpg,image/jpeg,image/webp"
+                    onChange={(event) => setAvatarFile(event.target.files?.[0] ?? null)}
+                  />
+                </div>
+                <Button type="submit" disabled={isUploading} className="w-full gap-2">
+                  {isUploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+                  Upload avatar
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
 
-        <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
+          {/* Danger Zone: Delete Account */}
+          <Card className="border-destructive/30 bg-destructive/5 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-destructive">Danger Zone</CardTitle>
+              <CardDescription>Permanently remove your personal account data.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!showDeleteConfirm ? (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="w-full gap-2"
+                  onClick={() => setShowDeleteConfirm(true)}
+                >
+                  <Trash2 className="size-4" />
+                  Delete Account
+                </Button>
+              ) : (
+                <form onSubmit={handleDeleteAccount} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" className="text-destructive font-medium">
+                      Enter your password to confirm
+                    </Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(event) => setConfirmPassword(event.target.value)}
+                      placeholder="Verify your password"
+                      className="border-destructive/40 focus-visible:ring-destructive"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      type="submit"
+                      variant="destructive"
+                      disabled={isDeleting}
+                      className="w-full gap-2"
+                    >
+                      {isDeleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                      Permanently Delete
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowDeleteConfirm(false)
+                        setConfirmPassword('')
+                      }}
+                      className="w-full"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Edit Profile Form */}
+        <Card className="border-border/60 bg-card/80 backdrop-blur-sm h-fit">
           <CardHeader>
             <CardTitle>Edit profile</CardTitle>
             <CardDescription>Change the details shown across the platform.</CardDescription>
