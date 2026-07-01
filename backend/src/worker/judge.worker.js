@@ -2,21 +2,33 @@ import { Worker } from "bullmq";
 import redis from "../queue/redis.js";
 
 import { judgeSubmission } from "../services/judge.service.js";
+import { startHeartbeat, setBusy, setIdle } from "./heartbeat.js";
+
+startHeartbeat();
 
 const worker = new Worker("judge-queue", async job => {
-    console.log(`Processing job ${job.id}`);
-    await judgeSubmission(job.data);
+    try {
+        await judgeSubmission(job.data);
+    }
+    catch (err) {
+        console.log("Judge error :", err);
+        throw err;
+    }
 }, { connection: redis });
 
-worker.on("completed", (job) => {
-    console.log(`Job ${job.id} completed`);
+worker.on("active", async (job) => {
+    await setBusy(`judge-queue: Job #${job.id}`);
 });
 
-worker.on("failed", (job, err) => {
+worker.on("completed", async (job) => {
+    await setIdle();
+});
+
+worker.on("failed", async (job, err) => {
     console.error(`Job ${job?.id} failed`, err);
 });
 
-worker.on("error", (err) => {
+worker.on("error", async (err) => {
     console.error(err);
 });
 
