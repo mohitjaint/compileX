@@ -15,15 +15,15 @@ const submissionUpdateHelper = async (
         submission,
         verdict,
         status,
-        contestId, 
-        contestParticipantId, 
+        contestId,
+        contestParticipantId,
         executionTime = null
     }
 ) => {
 
     submission.status = status;
     submission.verdict = verdict;
-    if(executionTime !== null) {
+    if (executionTime !== null) {
         submission.executionTime = executionTime;
     }
 
@@ -37,7 +37,7 @@ const submissionUpdateHelper = async (
 export const judgeSubmission = async (
     {
         submissionId,
-        contestId, 
+        contestId,
         contestParticipantId
     }
 ) => {
@@ -110,20 +110,16 @@ g++ main.cpp -o main`
         await new Promise((resolve) => {
             stream.on("end", resolve);
         });
-        
-        console.log("Compile Output:");
-        console.log(compileOutput);
 
         const compileResult = await exec.inspect();
-        console.log("Compilation result :\n", compileResult);
 
         if (compileResult.ExitCode !== 0) {
             await submissionUpdateHelper(
                 {
                     submission,
-                    verdict : "Compilation Error",
-                    status : "Completed", 
-                    contestId, 
+                    verdict: "Compilation Error",
+                    status: "Completed",
+                    contestId,
                     contestParticipantId
                 }
             );
@@ -133,46 +129,41 @@ g++ main.cpp -o main`
 
         // loop through storage/testcases/<problemId>/ and execute the compiled code with each test case and compare the output with the expected output
         const testcasesDir = path.join(process.cwd(), "storage", "testcases", submission.problem.toString());
-        console.log(testcasesDir);
         const testcases = fs.readdirSync(testcasesDir)
-                            .filter(file => file.startsWith("input"))
-                            .sort();
-        
-        console.log("Found testcases:", testcases);
+            .filter(file => file.startsWith("input"))
+            .sort();
+
         let allPassed = true;
-        
+
         let maxTime = 0;
 
-        for (const testcase of testcases) { 
+        for (const testcase of testcases) {
             let input = "";
             let expectedOutput = "";
-            try{
+            try {
                 input = fs.readFileSync(path.join(testcasesDir, testcase), "utf-8");
                 expectedOutput = fs.readFileSync(path.join(testcasesDir, testcase.replace("input", "output")), "utf-8").trim();
             }
             catch (err) {
-                console.error("Error reading test case files:", err);
                 await submissionUpdateHelper(
                     {
                         submission,
-                        verdict: "Runtime Error", 
+                        verdict: "Runtime Error",
                         status: "Failed",
-                        contestId, 
+                        contestId,
                         contestParticipantId
                     }
                 );
                 return;
             }
 
-            const timelimit = problem.timelimit/1000; // seconds
-
-            console.log("Starting testcase:", testcase);
+            const timelimit = problem.timelimit / 1000; // seconds
 
             const start = Date.now();
             const exec = await container.exec({
                 Cmd: [
                     "sh",
-                    "-c", 
+                    "-c",
                     `timeout ${timelimit}s sh -c "printf '%s' '${input}' | ./main"`
                 ],
                 AttachStdout: true,
@@ -201,14 +192,8 @@ g++ main.cpp -o main`
             await new Promise((resolve) => {
                 stream.on("end", resolve);
             });
-            
-            if (stderr) {
-                console.log("STDERR:", stderr);
-            }
-            
-            const runResult = await exec.inspect();
 
-            console.log("Run result :\n", runResult);
+            const runResult = await exec.inspect();
 
             if (runResult.ExitCode === 137) {
                 await submissionUpdateHelper(
@@ -216,7 +201,7 @@ g++ main.cpp -o main`
                         submission,
                         verdict: "Memory Limit Exceeded",
                         status: "Completed",
-                        contestId, 
+                        contestId,
                         contestParticipantId
                     }
                 );
@@ -229,8 +214,8 @@ g++ main.cpp -o main`
                     {
                         submission,
                         verdict: "Time Limit Exceeded",
-                        status: "Completed", 
-                        contestId, 
+                        status: "Completed",
+                        contestId,
                         contestParticipantId
                     }
                 );
@@ -244,7 +229,7 @@ g++ main.cpp -o main`
                         submission,
                         verdict: "Runtime Error",
                         status: "Completed",
-                        contestId, 
+                        contestId,
                         contestParticipantId
                     }
                 );
@@ -268,19 +253,19 @@ g++ main.cpp -o main`
 
             console.log("Finished testcase:", testcase);
         }
-        console.log("Loop completed");
-        
+        console.log("Finish all testcases!!");
+
 
         await submissionUpdateHelper(
             {
-                submission, 
+                submission,
                 verdict: allPassed ? "Accepted" : "Wrong Answer",
                 status: "Completed",
-                contestId, contestParticipantId, 
+                contestId, contestParticipantId,
                 executionTime: maxTime
             }
         );
-        
+
     }
     catch (error) {
 
@@ -294,7 +279,7 @@ g++ main.cpp -o main`
                 submission,
                 verdict: "Runtime Error",
                 status: "Failed",
-                contestId, 
+                contestId,
                 contestParticipantId
             }
         );
@@ -312,7 +297,7 @@ g++ main.cpp -o main`
             }
 
         }
-        catch {}
+        catch { }
 
     }
 

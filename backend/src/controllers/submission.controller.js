@@ -5,7 +5,7 @@ import Problem from "../models/problem.model.js";
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { judgeSubmission } from "../services/judge.service.js";
+import { addJobToJudgeQueue } from "../queue/judge.queue.js";
 
 const submitSolution = asyncHandler(async (req, res) => {
     const { problemId, language, code, contestId } = req.body;
@@ -57,14 +57,18 @@ const submitSolution = asyncHandler(async (req, res) => {
 
     await submission.save();
 
-    // Call the judge service to evaluate the submission
-    judgeSubmission(
-        {
+    // Queue the job to the judge queue
+    try {
+        await addJobToJudgeQueue({
             submissionId: submission._id,
             contestId: contestId || null,
             contestParticipantId: participant ? participant._id : null
-        }
-    );
+        })
+    }
+    catch (error) {
+        console.error("Error adding job to queue", error);
+        throw new ApiError(500, 'Unable to queue submission. Please try again.');
+    }
 
     res.status(201).json(new ApiResponse(201, 'Submission created successfully.', { submissionId: submission._id }));
 
