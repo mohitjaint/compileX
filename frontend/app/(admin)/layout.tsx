@@ -5,12 +5,12 @@ import { usePathname } from "next/navigation"
 import { Terminal, LayoutDashboard, Trophy, FileCode, Users, Server, Activity, Settings, ArrowLeft } from "lucide-react"
 
 const navigation = [
-  //{ name: "Overview", href: "/admin", icon: LayoutDashboard },
+  { name: "Overview", href: "/admin", icon: LayoutDashboard },
   { name: "Contests", href: "/admin/contests", icon: Trophy },
   { name: "Problems", href: "/admin/problems", icon: FileCode },
   { name: "Users", href: "/admin/users", icon: Users },
-  //{ name: "Workers", href: "/admin/workers", icon: Server },
-  //{ name: "Queue", href: "/admin/queue", icon: Activity },
+  { name: "Workers", href: "/admin/workers", icon: Server },
+  { name: "Queue", href: "/admin/queue", icon: Activity },
   // { name: "Settings", href: "/admin/settings", icon: Settings },
 ]
 
