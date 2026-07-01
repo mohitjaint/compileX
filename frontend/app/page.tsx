@@ -11,9 +11,9 @@ export default function LandingPage() {
       <Header />
       <main className="flex-1">
         <HeroSection />
-        <FeaturesSection />
+        {/* <FeaturesSection />
         <StatsSection />
-        <CTASection />
+        <CTASection /> */}
       </main>
       <Footer />
     </div>

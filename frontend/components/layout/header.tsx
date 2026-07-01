@@ -35,7 +35,7 @@ export function Header() {
       { name: "Contests", href: "/contests" },
       { name: "Problems", href: "/problems" },
       { name: "Submissions", href: "/submissions" },
-      { name: "Admin", href: "/admin" }
+      { name: "Admin", href: "/admin/contests" }
     ]
   }
   const initials = user?.fullName
