@@ -30,6 +30,7 @@ const registerUser = asyncHandler(async (req, res) => {
         username,
         fullName,
         email,
+        avatarUrl: "avatars/default-avatar.png",
         passwordHash: password
     });
     //Save user to database
