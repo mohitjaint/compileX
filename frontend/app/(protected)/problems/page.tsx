@@ -5,9 +5,7 @@ import Link from "next/link";
 import apiFetch from "@/lib/api"; // adjust path if required
 
 import { Button } from "@/components/ui/button";
-import { Search, Filter, CheckCircle2 } from "lucide-react";
-
-
+import { Search, Filter } from "lucide-react";
 
 const difficultyColors = {
   Easy: "text-success bg-success/10",
@@ -16,35 +14,42 @@ const difficultyColors = {
 }
 
 export default function ProblemsPage() {
-	const [problems, setProblems] = useState<any[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState("");
+  const [problems, setProblems] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("All Difficulties");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-	useEffect(() => {
-		const fetchProblems = async () => {
-					try {
-							setLoading(true);
+  useEffect(() => {
+    const fetchProblems = async () => {
+      try {
+        setLoading(true);
 
-							let response = await apiFetch("/problems/all");
+        let response = await apiFetch("/problems/all");
 
-              // assign indexes to problems
-              response.data = response.data.map((problem: any, index: number) => ({
-                ...problem,
-                index: index + 1, // Assign index starting from 1
-              }));
+        // assign indexes to problems
+        response.data = response.data.map((problem: any, index: number) => ({
+          ...problem,
+          index: index + 1, // Assign index starting from 1
+        }));
 
-							// console.log("Fetched problems:", response.data); // Log the fetched data
+        setProblems(response.data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-							setProblems(response.data);
-					} catch (err: any) {
-							setError(err.message);
-					} finally {
-							setLoading(false);
-					}
-			};
+    fetchProblems();
+  }, []);
 
-			fetchProblems();
-	}, []);
+  // Filter problems by search query and difficulty
+  const filteredProblems = problems.filter((problem) => {
+    const matchesSearch = problem.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesDifficulty = selectedDifficulty === "All Difficulties" || problem.difficulty === selectedDifficulty;
+    return matchesSearch && matchesDifficulty;
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
@@ -60,27 +65,22 @@ export default function ProblemsPage() {
           <input
             type="text"
             placeholder="Search problems..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-lg border border-border bg-secondary/50 py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
         <div className="flex gap-2">
-          <select className="rounded-lg border border-border bg-secondary/50 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-            <option>All Difficulties</option>
-            <option>Easy</option>
-            <option>Medium</option>
-            <option>Hard</option>
+          <select
+            value={selectedDifficulty}
+            onChange={(e) => setSelectedDifficulty(e.target.value)}
+            className="rounded-lg border border-border bg-secondary/50 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="All Difficulties">All Difficulties</option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
           </select>
-          <select className="rounded-lg border border-border bg-secondary/50 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-            <option>All Topics</option>
-            <option>Array</option>
-            <option>String</option>
-            <option>DP</option>
-            <option>Graph</option>
-          </select>
-          <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" />
-            More Filters
-          </Button>
         </div>
       </div>
 
@@ -119,30 +119,38 @@ export default function ProblemsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {problems.map((problem) => (
-              <tr key={problem._id} className="hover:bg-secondary/30">
-                {/* Index */}
-                <td className="px-6 py-4">
-                  <span className="font-medium">{problem.index}</span>
-                </td>
+            {filteredProblems.length > 0 ? (
+              filteredProblems.map((problem) => (
+                <tr key={problem._id} className="hover:bg-secondary/30">
+                  {/* Index */}
+                  <td className="px-6 py-4">
+                    <span className="font-medium">{problem.index}</span>
+                  </td>
 
-                <td className="px-6 py-4">
-                  <Link 
-                    href={`/problems/${problem.slug}`}
-                    className="font-medium hover:text-primary"
-                  >
-                    {problem.title}
-                  </Link>
+                  <td className="px-6 py-4">
+                    <Link
+                      href={`/problems/${problem.slug}`}
+                      className="font-medium hover:text-primary"
+                    >
+                      {problem.title}
+                    </Link>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <span className={`rounded px-2 py-1 text-xs font-medium ${difficultyColors[problem.difficulty as keyof typeof difficultyColors]}`}>
+                      {problem.difficulty}
+                    </span>
+                  </td>
+
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={3} className="px-6 py-8 text-center text-sm text-muted-foreground">
+                  No problems match your search/filter criteria.
                 </td>
-                
-                <td className="px-6 py-4">
-                  <span className={`rounded px-2 py-1 text-xs font-medium ${difficultyColors[problem.difficulty as keyof typeof difficultyColors]}`}>
-                    {problem.difficulty}
-                  </span>
-                </td>
-                
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
@@ -150,7 +158,7 @@ export default function ProblemsPage() {
       {/* Pagination */}
       <div className="mt-6 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing 1-{problems.length} of {problems.length} problems
+          Showing 1-{filteredProblems.length} of {filteredProblems.length} problems
         </p>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" disabled>
